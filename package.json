@@ -1,0 +1,16 @@
+{
+  "name": "spk-beasiswa",
+  "version": "1.0.0",
+  "description": "Sistem Pendukung Keputusan Beasiswa menggunakan Algoritma C4.5",
+  "scripts": {
+    "build": "cd my-app-main && npm install && npm run build",
+    "start": "cd my-app-main && npm start",
+    "dev": "cd my-app-main && npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ZidanBagus/spk-beasiswa.git"
+  },
+  "author": "ZidanBagus",
+  "license": "MIT"
+}

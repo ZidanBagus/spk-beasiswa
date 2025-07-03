@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "my-app-main/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/my-app-main/$1"
+    }
+  ],
+  "functions": {
+    "my-app-main/build/**": {
+      "includeFiles": "my-app-main/build/**"
+    }
+  }
+}
