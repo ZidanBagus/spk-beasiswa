@@ -120,7 +120,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📞 Kontak
 
-Project Link: [https://github.com/yourusername/spk-beasiswa](https://github.com/yourusername/spk-beasiswa)
+Project Link: [https://github.com/ZidanBagus/spk-beasiswa](https://github.com/ZidanBagus/spk-beasiswa)
 
 ## 🙏 Acknowledgments
 
