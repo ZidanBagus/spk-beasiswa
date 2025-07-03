@@ -21,4 +21,7 @@ router.get('/visualize', selectionController.getTreeVisualization);
 // Rute untuk melakukan prediksi pada satu kasus data
 router.post('/predict-single', selectionController.predictSingle);
 
+// Rute untuk mengecek status model apakah sudah dilatih atau belum
+router.get('/model-status', selectionController.checkModelStatus);
+
 module.exports = router;

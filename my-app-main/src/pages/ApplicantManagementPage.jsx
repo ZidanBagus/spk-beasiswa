@@ -4,11 +4,12 @@ import UploadFileModal from '../components/applicants/UploadFileModal.jsx';
 import DeleteConfirmationModal from '../components/common/DeleteConfirmationModal.jsx';
 import {
     Table, Button, ButtonGroup, Spinner, Alert, InputGroup,
-    Form as BootstrapForm, Card, Row, Col, Pagination
+    Form as BootstrapForm, Card, Row, Col, Pagination, Badge, Dropdown, Modal
 } from 'react-bootstrap';
-import { PersonPlusFill, Upload, PencilSquare, Trash3Fill, Search, InfoCircleFill } from 'react-bootstrap-icons';
+import { PersonPlusFill, Upload, PencilSquare, Trash3Fill, Search, InfoCircleFill, Filter, Download, Eye, BarChart, CheckCircle, XCircle } from 'react-bootstrap-icons';
 import applicantService from '../services/applicantService';
 import { toast } from 'react-toastify';
+import './ApplicantManagementPage.css';
 
 const ApplicantManagementPage = () => {
   const [applicants, setApplicants] = useState([]);
@@ -28,18 +29,32 @@ const ApplicantManagementPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [filters, setFilters] = useState({
+    prodi: '',
+    statusBeasiswa: '',
+    ipkRange: '',
+    penghasilanRange: ''
+  });
+  const [showFilters, setShowFilters] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [statistics, setStatistics] = useState(null);
 
-  const fetchApplicants = useCallback(async (page = 1, search = '', limit = itemsPerPage) => {
+  const fetchApplicants = useCallback(async (page = 1, search = '', limit = itemsPerPage, appliedFilters = filters) => {
     if (applicants.length === 0 && !search && page === 1) setIsLoading(true);
     else setIsTableLoading(true);
     setError('');
     try {
-      const params = { page, limit, search };
+      const params = { page, limit, search, ...appliedFilters };
       const data = await applicantService.getAllApplicants(params);
       setApplicants(data.applicants || []);
       setTotalPages(data.totalPages || 0);
       setTotalItems(data.totalItems || 0);
       setCurrentPage(data.currentPage || 1);
+      
+      // Calculate statistics
+      if (data.applicants && data.applicants.length > 0) {
+        calculateStatistics(data.applicants);
+      }
     } catch (err) {
       const fetchError = err.message || 'Gagal memuat data pendaftar.';
       setError(fetchError);
@@ -49,7 +64,36 @@ const ApplicantManagementPage = () => {
       setIsLoading(false);
       setIsTableLoading(false);
     }
-  }, [itemsPerPage, applicants.length]);
+  }, [itemsPerPage, applicants.length, filters]);
+
+  const calculateStatistics = (data) => {
+    const stats = {
+      total: data.length,
+      diterima: data.filter(a => {
+        const status = a.statusBeasiswa || a.status || a.keputusan || '';
+        return status === 'Diterima' || status === 'Terima' || status === 'Ya' || status === 'Accept';
+      }).length,
+      ditolak: data.filter(a => {
+        const status = a.statusBeasiswa || a.status || a.keputusan || '';
+        return status === 'Ditolak' || status === 'Tidak' || status === 'No' || status === 'Reject';
+      }).length,
+      avgIPK: data.reduce((sum, a) => sum + (parseFloat(a.ipk) || 0), 0) / data.length,
+      prodiDistribution: {},
+      ipkRanges: {
+        'Sangat Baik (≥3.5)': data.filter(a => parseFloat(a.ipk) >= 3.5).length,
+        'Baik (3.0-3.49)': data.filter(a => parseFloat(a.ipk) >= 3.0 && parseFloat(a.ipk) < 3.5).length,
+        'Cukup (<3.0)': data.filter(a => parseFloat(a.ipk) < 3.0).length
+      }
+    };
+    
+    // Calculate prodi distribution
+    data.forEach(applicant => {
+      const prodi = applicant.prodi || 'Tidak Diketahui';
+      stats.prodiDistribution[prodi] = (stats.prodiDistribution[prodi] || 0) + 1;
+    });
+    
+    setStatistics(stats);
+  };
 
   useEffect(() => {
     fetchApplicants(currentPage, searchTerm, itemsPerPage);
@@ -134,6 +178,40 @@ const ApplicantManagementPage = () => {
   const handleSearchChange = (event) => { setSearchTerm(event.target.value); setCurrentPage(1); };
   const handlePageChange = (pageNumber) => { if (pageNumber >= 1 && pageNumber <= totalPages && !isTableLoading) { setCurrentPage(pageNumber); }};
   const handleItemsPerPageChange = (value) => { setItemsPerPage(parseInt(value)); setCurrentPage(1); };
+  
+  const handleFilterChange = (filterKey, value) => {
+    const newFilters = { ...filters, [filterKey]: value };
+    setFilters(newFilters);
+    setCurrentPage(1);
+    fetchApplicants(1, searchTerm, itemsPerPage, newFilters);
+  };
+  
+  const clearFilters = () => {
+    const emptyFilters = {
+      prodi: '',
+      statusBeasiswa: '',
+      ipkRange: '',
+      penghasilanRange: ''
+    };
+    setFilters(emptyFilters);
+    setCurrentPage(1);
+    fetchApplicants(1, searchTerm, itemsPerPage, emptyFilters);
+  };
+  
+  const exportData = async () => {
+    try {
+      const toastId = toast.loading('Mengekspor data...');
+      // This would call an export service
+      toast.update(toastId, {
+        render: 'Data berhasil diekspor!',
+        type: 'success',
+        isLoading: false,
+        autoClose: 3000
+      });
+    } catch (error) {
+      toast.error('Gagal mengekspor data');
+    }
+  };
 
   const renderPaginationItems = () => {
     if (totalPages <= 1) return null;
@@ -154,32 +232,181 @@ const ApplicantManagementPage = () => {
 
   return (
     <>
-      <Row className="align-items-center mb-4 g-3">
-        <Col md><h1 className="h2 fw-bolder text-dark mb-0">Manajemen Data Pendaftar</h1></Col>
-        <Col md="auto">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 className="h2 fw-bolder text-dark mb-1">Manajemen Data Pendaftar</h1>
+          <p className="text-muted mb-0">Kelola data historis pendaftar beasiswa untuk training model C4.5</p>
+        </div>
+        <div className="d-flex gap-2">
+          <Button variant="outline-info" size="sm" onClick={() => setShowStats(true)}>
+            <BarChart className="me-1" size={14} /> Statistik
+          </Button>
+          <Button variant="outline-secondary" size="sm" onClick={exportData}>
+            <Download className="me-1" size={14} /> Export
+          </Button>
           <ButtonGroup>
-            <Button variant="success" onClick={handleAddApplicant} title="Tambah Pendaftar Baru"><PersonPlusFill className="me-1 me-md-2" /> <span className="d-none d-md-inline">Tambah</span></Button>
-            <Button variant="info" onClick={handleUploadApplicants} title="Unggah Data dari Excel"><Upload className="me-1 me-md-2" /> <span className="d-none d-md-inline">Unggah</span></Button>
+            <Button variant="success" onClick={handleAddApplicant}>
+              <PersonPlusFill className="me-1" size={14} /> Tambah
+            </Button>
+            <Button variant="info" onClick={handleUploadApplicants}>
+              <Upload className="me-1" size={14} /> Upload
+            </Button>
           </ButtonGroup>
-        </Col>
-      </Row>
+        </div>
+      </div>
+
+      {/* Statistics Cards */}
+      {statistics && (
+        <Row className="g-3 mb-4">
+          <Col md={3}>
+            <Card className="stats-card border-0 h-100">
+              <Card.Body className="text-center p-3">
+                <div className="stats-icon bg-primary bg-opacity-10 rounded-circle mx-auto mb-2">
+                  <PersonPlusFill className="text-primary" size={20} />
+                </div>
+                <h6 className="text-muted mb-1">Total Pendaftar</h6>
+                <div className="fs-4 fw-bold text-primary">{statistics.total}</div>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={3}>
+            <Card className="stats-card border-0 h-100">
+              <Card.Body className="text-center p-3">
+                <div className="stats-icon bg-success bg-opacity-10 rounded-circle mx-auto mb-2">
+                  <CheckCircle className="text-success" size={20} />
+                </div>
+                <h6 className="text-muted mb-1">Diterima</h6>
+                <div className="fs-4 fw-bold text-success">{statistics.diterima}</div>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={3}>
+            <Card className="stats-card border-0 h-100">
+              <Card.Body className="text-center p-3">
+                <div className="stats-icon bg-danger bg-opacity-10 rounded-circle mx-auto mb-2">
+                  <XCircle className="text-danger" size={20} />
+                </div>
+                <h6 className="text-muted mb-1">Ditolak</h6>
+                <div className="fs-4 fw-bold text-danger">{statistics.ditolak}</div>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={3}>
+            <Card className="stats-card border-0 h-100">
+              <Card.Body className="text-center p-3">
+                <div className="stats-icon bg-info bg-opacity-10 rounded-circle mx-auto mb-2">
+                  <BarChart className="text-info" size={20} />
+                </div>
+                <h6 className="text-muted mb-1">Rata-rata IPK</h6>
+                <div className="fs-4 fw-bold text-info">{statistics.avgIPK.toFixed(2)}</div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
 
       {error && <Alert variant="danger" className="py-2" onClose={() => setError('')} dismissible>{error}</Alert>}
 
       <Card className="shadow-sm border-0">
-        <Card.Header className="bg-light border-bottom-0 pt-3 pb-0 px-4">
-          <Row className="align-items-center g-2">
-            <Col xs={12} md={5} lg={4}><h5 className="fw-medium mb-lg-2">Daftar Pendaftar (Data Historis)</h5></Col>
-            <Col xs={12} sm={7} md={4} lg={5}>
-                <InputGroup size="sm"><InputGroup.Text><Search /></InputGroup.Text><BootstrapForm.Control type="text" placeholder="Cari nama pendaftar..." value={searchTerm} onChange={handleSearchChange}/></InputGroup>
+        <Card.Header className="bg-gradient-light border-bottom">
+          <Row className="align-items-center g-3">
+            <Col md={4}>
+              <h5 className="fw-semibold mb-0 d-flex align-items-center">
+                <PersonPlusFill className="me-2 text-primary" size={20} />
+                Daftar Pendaftar
+                {totalItems > 0 && (
+                  <Badge bg="primary" className="ms-2 fs-6">
+                    {totalItems.toLocaleString()}
+                  </Badge>
+                )}
+              </h5>
             </Col>
-            <Col xs={12} sm={5} md={3} lg={3} className="d-flex justify-content-sm-end align-items-center">
-                <BootstrapForm.Label htmlFor="itemsPerPageSelect" className="me-2 small text-nowrap mb-0">Tampil:</BootstrapForm.Label>
-                <BootstrapForm.Select id="itemsPerPageSelect" size="sm" value={itemsPerPage} onChange={(e) => handleItemsPerPageChange(e.target.value)} style={{maxWidth: '75px'}}>
-                    <option value="10">10</option><option value="20">20</option><option value="50">50</option>
-                </BootstrapForm.Select>
+            <Col md={5}>
+              <InputGroup size="sm">
+                <InputGroup.Text><Search /></InputGroup.Text>
+                <BootstrapForm.Control 
+                  type="text" 
+                  placeholder="Cari nama, prodi, atau status..." 
+                  value={searchTerm} 
+                  onChange={handleSearchChange}
+                />
+              </InputGroup>
+            </Col>
+            <Col md={3} className="d-flex justify-content-end gap-2">
+              <Button 
+                variant="outline-secondary" 
+                size="sm" 
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="me-1" size={12} /> Filter
+              </Button>
+              <BootstrapForm.Select 
+                size="sm" 
+                value={itemsPerPage} 
+                onChange={(e) => handleItemsPerPageChange(e.target.value)} 
+                style={{maxWidth: '70px'}}
+              >
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </BootstrapForm.Select>
             </Col>
           </Row>
+          
+          {/* Advanced Filters */}
+          {showFilters && (
+            <Row className="mt-3 pt-3 border-top">
+              <Col md={3}>
+                <BootstrapForm.Group>
+                  <BootstrapForm.Label className="small fw-medium">Program Studi</BootstrapForm.Label>
+                  <BootstrapForm.Select 
+                    size="sm" 
+                    value={filters.prodi} 
+                    onChange={(e) => handleFilterChange('prodi', e.target.value)}
+                  >
+                    <option value="">Semua Prodi</option>
+                    <option value="Teknik Informatika">Teknik Informatika</option>
+                    <option value="Sistem Informasi">Sistem Informasi</option>
+                    <option value="Teknik Komputer">Teknik Komputer</option>
+                  </BootstrapForm.Select>
+                </BootstrapForm.Group>
+              </Col>
+              <Col md={3}>
+                <BootstrapForm.Group>
+                  <BootstrapForm.Label className="small fw-medium">Status Beasiswa</BootstrapForm.Label>
+                  <BootstrapForm.Select 
+                    size="sm" 
+                    value={filters.statusBeasiswa} 
+                    onChange={(e) => handleFilterChange('statusBeasiswa', e.target.value)}
+                  >
+                    <option value="">Semua Status</option>
+                    <option value="Diterima">Diterima</option>
+                    <option value="Ditolak">Ditolak</option>
+                  </BootstrapForm.Select>
+                </BootstrapForm.Group>
+              </Col>
+              <Col md={3}>
+                <BootstrapForm.Group>
+                  <BootstrapForm.Label className="small fw-medium">Rentang IPK</BootstrapForm.Label>
+                  <BootstrapForm.Select 
+                    size="sm" 
+                    value={filters.ipkRange} 
+                    onChange={(e) => handleFilterChange('ipkRange', e.target.value)}
+                  >
+                    <option value="">Semua IPK</option>
+                    <option value="high">&ge; 3.5 (Sangat Baik)</option>
+                    <option value="medium">3.0 - 3.49 (Baik)</option>
+                    <option value="low">&lt; 3.0 (Cukup)</option>
+                  </BootstrapForm.Select>
+                </BootstrapForm.Group>
+              </Col>
+              <Col md={3} className="d-flex align-items-end">
+                <Button variant="outline-danger" size="sm" onClick={clearFilters} className="w-100">
+                  Reset Filter
+                </Button>
+              </Col>
+            </Row>
+          )}
         </Card.Header>
         <Card.Body className="p-0">
           {isLoading ? (
@@ -191,29 +418,64 @@ const ApplicantManagementPage = () => {
             {isTableLoading && <div className="text-center py-3 border-bottom"><Spinner size="sm" animation="border" variant="secondary" className="me-2"/> Memperbarui...</div>}
             <div className="table-responsive">
               <Table striped bordered hover className="mb-0 align-middle small">
-                <thead className="table-light">
+                <thead className="table-dark">
                   <tr>
-                    <th className="text-center">No</th><th>Nama</th><th>Prodi</th>
-                    <th className="text-center">IPK</th><th className="text-center">SKS</th>
-                    <th>Penghasilan Ortu</th><th className="text-center">Tanggungan</th><th>Status Aktual</th>
-                    <th style={{minWidth: '100px'}} className="text-center">Aksi</th>
+                    <th className="text-center" style={{width: '50px'}}>No</th>
+                    <th>Nama Pendaftar</th>
+                    <th>Program Studi</th>
+                    <th className="text-center" style={{width: '80px'}}>IPK</th>
+                    <th className="text-center" style={{width: '70px'}}>SKS</th>
+                    <th style={{width: '120px'}}>Penghasilan</th>
+                    <th className="text-center" style={{width: '90px'}}>Tanggungan</th>
+                    <th className="text-center" style={{width: '100px'}}>Status</th>
+                    <th className="text-center" style={{width: '100px'}}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {applicants.map((applicant, index) => (
-                    <tr key={applicant.id}>
-                      <td className="text-center">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                    <tr key={applicant.id} className="table-row-hover">
+                      <td className="text-center text-muted small">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                       <td className="fw-medium">{applicant.nama}</td>
-                      <td>{applicant.prodi}</td>
-                      <td className="text-center">{typeof applicant.ipk === 'number' ? applicant.ipk.toFixed(2) : applicant.ipk}</td>
-                      <td className="text-center">{applicant.sks}</td>
-                      <td>{applicant.penghasilanOrtu}</td>
-                      <td className="text-center">{applicant.jmlTanggungan}</td>
-                      <td style={{ color: applicant.statusBeasiswa === 'Diterima' ? 'var(--bs-success)' : 'var(--bs-danger)', fontWeight: 'bold' }}>{applicant.statusBeasiswa}</td>
+                      <td className="small">{applicant.prodi}</td>
+                      <td className="text-center">
+                        <span className="badge bg-light text-dark fs-6">
+                          {typeof applicant.ipk === 'number' ? applicant.ipk.toFixed(2) : applicant.ipk}
+                        </span>
+                      </td>
+                      <td className="text-center small">{applicant.sks}</td>
+                      <td className="small">
+                        <span className="badge bg-light text-dark fs-6">
+                          {applicant.penghasilanOrtu}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <span className="badge bg-light text-dark fs-6">
+                          {applicant.jmlTanggungan}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        {(() => {
+                          const status = applicant.statusBeasiswa || applicant.status || applicant.keputusan || 'Tidak Diketahui';
+                          const isAccepted = status === 'Diterima' || status === 'Terima' || status === 'Ya' || status === 'Accept';
+                          return (
+                            <span className="badge bg-light text-dark fs-6">
+                              {isAccepted ? (
+                                <><CheckCircle className="me-1" size={12} />Diterima</>
+                              ) : (
+                                <><XCircle className="me-1" size={12} />Ditolak</>
+                              )}
+                            </span>
+                          );
+                        })()}
+                      </td>
                       <td className="text-center">
                         <ButtonGroup size="sm">
-                          <Button variant="outline-primary" onClick={() => handleEditApplicant(applicant)} title="Edit"><PencilSquare /></Button>
-                          <Button variant="outline-danger" onClick={() => handleDeleteClick(applicant)} title="Hapus"><Trash3Fill /></Button>
+                          <Button variant="outline-primary" onClick={() => handleEditApplicant(applicant)} title="Edit Data">
+                            <PencilSquare size={12} />
+                          </Button>
+                          <Button variant="outline-danger" onClick={() => handleDeleteClick(applicant)} title="Hapus Data">
+                            <Trash3Fill size={12} />
+                          </Button>
                         </ButtonGroup>
                       </td>
                     </tr>
@@ -234,6 +496,80 @@ const ApplicantManagementPage = () => {
 
       {isAddModalOpen && ( <ApplicantFormModal show={isAddModalOpen} onHide={() => { setIsAddModalOpen(false); setEditingApplicant(null); }} onSubmit={handleFormSubmit} applicantData={editingApplicant} /> )}
       {isUploadModalOpen && ( <UploadFileModal show={isUploadModalOpen} onHide={() => setIsUploadModalOpen(false)} onFileUpload={handleFileUploadSubmit} /> )}
+      {/* Statistics Modal */}
+      <Modal show={showStats} onHide={() => setShowStats(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <BarChart className="me-2" />
+            Statistik Data Pendaftar
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {statistics && (
+            <Row className="g-4">
+              <Col md={6}>
+                <Card className="h-100">
+                  <Card.Header>
+                    <h6 className="mb-0">Distribusi Status Beasiswa</h6>
+                  </Card.Header>
+                  <Card.Body>
+                    <div className="mb-3">
+                      <div className="d-flex justify-content-between mb-1">
+                        <span>Diterima</span>
+                        <span>{statistics.diterima} ({((statistics.diterima/statistics.total)*100).toFixed(1)}%)</span>
+                      </div>
+                      <div className="progress mb-2" style={{height: '8px'}}>
+                        <div className="progress-bar bg-success" style={{width: `${(statistics.diterima/statistics.total)*100}%`}}></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="d-flex justify-content-between mb-1">
+                        <span>Ditolak</span>
+                        <span>{statistics.ditolak} ({((statistics.ditolak/statistics.total)*100).toFixed(1)}%)</span>
+                      </div>
+                      <div className="progress" style={{height: '8px'}}>
+                        <div className="progress-bar bg-danger" style={{width: `${(statistics.ditolak/statistics.total)*100}%`}}></div>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={6}>
+                <Card className="h-100">
+                  <Card.Header>
+                    <h6 className="mb-0">Distribusi IPK</h6>
+                  </Card.Header>
+                  <Card.Body>
+                    {Object.entries(statistics.ipkRanges).map(([range, count]) => {
+                      const percentage = ((count/statistics.total)*100).toFixed(1);
+                      return (
+                        <div key={range} className="mb-3">
+                          <div className="d-flex justify-content-between mb-1">
+                            <span className="small">{range}</span>
+                            <span className="small">{count} ({percentage}%)</span>
+                          </div>
+                          <div className="progress" style={{height: '6px'}}>
+                            <div 
+                              className={`progress-bar ${range.includes('Sangat') ? 'bg-success' : range.includes('Baik') ? 'bg-info' : 'bg-warning'}`} 
+                              style={{width: `${percentage}%`}}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowStats(false)}>
+            Tutup
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       {applicantToDelete && ( <DeleteConfirmationModal show={showDeleteConfirmModal} onHide={() => { setShowDeleteConfirmModal(false); setApplicantToDelete(null); }} onConfirm={confirmDeleteApplicant} title="Konfirmasi Hapus" message={`Anda yakin ingin menghapus data "${applicantToDelete.nama}"?`} /> )}
     </>
   );

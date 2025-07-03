@@ -68,18 +68,18 @@ exports.getAllSelectionResults = async (req, res) => {
     // Hitung total item yang cocok dengan filter (untuk pagination dan summary)
     const count = await SelectionResult.count({ where: whereClause });
 
-    // Hitung summary berdasarkan KESELURUHAN data yang cocok dengan filter
-    const totalRecommended = await SelectionResult.count({
+    // Hitung summary berdasarkan filter yang aktif
+    const totalTerima = await SelectionResult.count({
       where: {
         ...whereClause, 
-        statusKelulusan: 'Direkomendasikan'
+        statusKelulusan: 'Terima'
       }
     });
 
-    const totalNotRecommended = await SelectionResult.count({
+    const totalTidak = await SelectionResult.count({
       where: {
         ...whereClause, 
-        statusKelulusan: 'Tidak Direkomendasikan'
+        statusKelulusan: 'Tidak'
       }
     });
     
@@ -90,9 +90,9 @@ exports.getAllSelectionResults = async (req, res) => {
       totalPages: String(fetchAll).toLowerCase() === 'true' ? 1 : Math.ceil(count / parseInt(limit)),
       currentPage: String(fetchAll).toLowerCase() === 'true' ? 1 : parseInt(page),
       summary: {
-        total: count, // Total yang cocok dengan filter
-        recommended: totalRecommended,
-        notRecommended: totalNotRecommended
+        total: count,
+        Terima: totalTerima,
+        Tidak: totalTidak
       }
     });
   } catch (error) {

@@ -40,3 +40,44 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Decision Path Styling */
+.decision-path {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.decision-path .badge {
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.decision-path .bi-arrow-right {
+  color: #6c757d;
+  font-size: 1.2rem;
+}
+
+/* Form Styling */
+.form-text {
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.form-label i {
+  color: #6c757d;
+}
+
+/* Prediction Result Styling */
+.prediction-badge {
+  transition: all 0.3s ease;
+}
+
+.prediction-badge:hover {
+  transform: scale(1.05);
+}

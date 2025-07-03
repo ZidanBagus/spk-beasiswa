@@ -33,6 +33,52 @@ const useDashboardData = () => {
         return chartData;
     }, []);
 
+    const processDoughnutData = useCallback((attribute, results) => {
+        const config = chartConfig[attribute];
+        const data = [0, 0]; // [Ikut, Tidak Ikut]
+        results.forEach(item => {
+            if (item.statusKelulusan === 'Terima') {
+                if (item[attribute] === 'Ya') {
+                    data[0]++;
+                } else {
+                    data[1]++;
+                }
+            }
+        });
+        return {
+            labels: config.labels,
+            datasets: [{
+                data: data,
+                backgroundColor: config.colors,
+                borderColor: '#fff',
+                borderWidth: 2,
+            }]
+        };
+    }, []);
+
+    const processDoughnutData = useCallback((attribute, results) => {
+        const config = chartConfig[attribute];
+        const data = [0, 0]; // [Ikut, Tidak Ikut]
+        results.forEach(item => {
+            if (item.statusKelulusan === 'Terima') {
+                if (item[attribute] === 'Ya') {
+                    data[0]++;
+                } else {
+                    data[1]++;
+                }
+            }
+        });
+        return {
+            labels: config.labels,
+            datasets: [{
+                data: data,
+                backgroundColor: config.colors,
+                borderColor: '#fff',
+                borderWidth: 2,
+            }]
+        };
+    }, []);
+
     const fetchData = useCallback(async () => {
         setIsLoading(true);
         setError('');
@@ -60,12 +106,12 @@ const useDashboardData = () => {
                         if (ipk < 3.0) return '<3.00'; if (ipk <= 3.25) return '3.00-3.25'; if (ipk <= 3.50) return '3.26-3.50'; if (ipk <= 3.75) return '3.51-3.75'; return '>3.75';
                     }, results),
                     penghasilan: processChartData('penghasilan', chartConfig.penghasilan.labels, item => item.penghasilanOrtu, results),
-                    organisasi: processChartData('organisasi', chartConfig.organisasi.labels, item => item.ikutOrganisasi, results),
                     tanggungan: processChartData('tanggungan', chartConfig.tanggungan.labels, item => {
                         const tanggungan = parseInt(item.jmlTanggungan);
                         if (tanggungan <= 1) return '1'; if (tanggungan === 2) return '2'; if (tanggungan === 3) return '3'; if (tanggungan === 4) return '4'; return '> 4';
                     }, results),
-                    ukm: processChartData('ukm', chartConfig.ukm.labels, item => item.ikutUKM, results)
+                    organisasi: processDoughnutData('ikutOrganisasi', results),
+                    ukm: processDoughnutData('ikutUKM', results)
                 }
             });
 
@@ -75,7 +121,7 @@ const useDashboardData = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [processChartData, stats.applicants]);
+    }, [processChartData, processDoughnutData, stats.applicants]);
 
     return { stats, isLoading, error, fetchData };
 };

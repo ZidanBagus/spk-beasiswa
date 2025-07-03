@@ -58,23 +58,45 @@ export const getChartOptions = (title, type = 'bar', additionalOptions = {}) => 
 // Color and label configurations for each chart
 export const chartConfig = {
     ipk: {
+        type: 'bar',
         labels: ['<3.00', '3.00-3.25', '3.26-3.50', '3.51-3.75', '>3.75'],
-        colors: { terima: { bg: 'rgba(25, 135, 84, 0.8)' }, tidak: { bg: 'rgba(220, 53, 69, 0.8)' } }
+        colors: { 
+            terima: { bg: 'rgba(25, 135, 84, 0.8)', border: 'rgba(25, 135, 84, 1)' }, 
+            tidak: { bg: 'rgba(220, 53, 69, 0.8)', border: 'rgba(220, 53, 69, 1)' } 
+        }
     },
     penghasilan: {
+        type: 'bar',
         labels: ['Sangat Rendah', 'Rendah', 'Sedang', 'Tinggi', 'Sangat Tinggi'],
-        colors: { terima: { bg: 'rgba(13, 110, 253, 0.8)' }, tidak: { bg: 'rgba(255, 193, 7, 0.8)' } }
-    },
-    organisasi: {
-        labels: ['Tidak Ikut', 'Anggota Pasif', 'Anggota Aktif', 'Pengurus', 'Ketua/BPH'],
-        colors: { terima: { bg: 'rgba(108, 117, 125, 0.8)' }, tidak: { bg: 'rgba(248, 249, 250, 0.8)' } }
+        colors: { 
+            terima: { bg: 'rgba(13, 110, 253, 0.8)', border: 'rgba(13, 110, 253, 1)' }, 
+            tidak: { bg: 'rgba(255, 193, 7, 0.8)', border: 'rgba(255, 193, 7, 1)' } 
+        }
     },
     tanggungan: {
+        type: 'bar',
         labels: ['1', '2', '3', '4', '> 4'],
-        colors: { terima: { bg: 'rgba(23, 162, 184, 0.8)' }, tidak: { bg: 'rgba(255, 193, 7, 0.6)' } }
+        colors: { 
+            terima: { bg: 'rgba(23, 162, 184, 0.8)', border: 'rgba(23, 162, 184, 1)' }, 
+            tidak: { bg: 'rgba(255, 193, 7, 0.6)', border: 'rgba(255, 193, 7, 1)' } 
+        }
+    },
+    organisasi: {
+        type: 'bar',
+        title: 'Hasil Berdasarkan Keikutsertaan Organisasi',
+        labels: ['Ya', 'Tidak'],
+        colors: { 
+            terima: { bg: 'rgba(25, 135, 84, 0.8)', border: 'rgba(25, 135, 84, 1)' }, 
+            tidak: { bg: 'rgba(220, 53, 69, 0.8)', border: 'rgba(220, 53, 69, 1)' } 
+        }
     },
     ukm: {
-        labels: ['Tidak Ikut', 'Anggota Pasif', 'Anggota Aktif', 'Pengurus', 'Ketua/BPH'],
-        colors: { terima: { bg: 'rgba(214, 51, 132, 0.8)' }, tidak: { bg: 'rgba(111, 66, 193, 0.8)' } }
+        type: 'bar',
+        title: 'Hasil Berdasarkan Keikutsertaan UKM',
+        labels: ['Ya', 'Tidak'],
+        colors: { 
+            terima: { bg: 'rgba(25, 135, 84, 0.8)', border: 'rgba(25, 135, 84, 1)' }, 
+            tidak: { bg: 'rgba(220, 53, 69, 0.8)', border: 'rgba(220, 53, 69, 1)' } 
+        }
     }
 };

@@ -1,0 +1,22 @@
+{
+    "folders": [
+        {
+            "name": "Frontend",
+            "path": "."
+        },
+        {
+            "name": "Backend",
+            "path": "../backend-main/backend-main"
+        }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/.git": true,
+            "**/.svn": true,
+            "**/.hg": true,
+            "**/CVS": true,
+            "**/.DS_Store": true,
+            "**/Thumbs.db": true
+        }
+    }
+}

@@ -7,6 +7,15 @@ const { buildTree, predict, visualizeTree } = require('../utils/c45-engine');
 let trainedModel = null;
 let calculationSteps = [];
 
+// Endpoint to check if model is trained
+exports.checkModelStatus = async (req, res) => {
+    if (trainedModel) {
+        res.status(200).json({ trained: true });
+    } else {
+        res.status(200).json({ trained: false });
+    }
+};
+
 // Fungsi trainModel untuk melatih model C4.5 dari data historis
 exports.trainModel = async (req, res) => {
     const { trainingDataIds, selectedAttributeNames } = req.body;
@@ -80,8 +89,8 @@ exports.testModel = async (req, res) => {
                 ipk: plainApplicant.ipk,
                 penghasilanOrtu: plainApplicant.penghasilanOrtu,
                 jmlTanggungan: plainApplicant.jmlTanggungan,
-                ikutOrganisasi: plainApplicant.ikutOrganisasi,
-                ikutUKM: plainApplicant.ikutUKM,
+                ikutOrganisasi: plainApplicant.ikutOrganisasi ? 'Ya' : 'Tidak',
+                ikutUKM: plainApplicant.ikutUKM ? 'Ya' : 'Tidak',
                 statusKelulusan: predictedStatus === 'terima' ? 'Terima' : 'Tidak', // mapping ke format database
                 alasanKeputusan: reason,
                 batchId: newBatch.id,
@@ -167,8 +176,8 @@ exports.testModelOnAllData = async (req, res) => {
                 ipk: plainApplicant.ipk,
                 penghasilanOrtu: plainApplicant.penghasilanOrtu,
                 jmlTanggungan: plainApplicant.jmlTanggungan,
-                ikutOrganisasi: plainApplicant.ikutOrganisasi,
-                ikutUKM: plainApplicant.ikutUKM,
+                ikutOrganisasi: plainApplicant.ikutOrganisasi ? 'Ya' : 'Tidak',
+                ikutUKM: plainApplicant.ikutUKM ? 'Ya' : 'Tidak',
                 statusKelulusan: predictedStatus === 'terima' ? 'Terima' : 'Tidak', // mapping ke format database
                 alasanKeputusan: reason,
                 batchId: newBatch.id,
@@ -229,7 +238,18 @@ exports.predictSingle = async (req, res) => {
         return res.status(400).json({ message: "Model belum dilatih." });
     }
     try {
-        const { decision, path } = predict(trainedModel, req.body);
+        // Transform input keys for categorical attributes by appending '_kategori'
+        const categoricalAttributes = ['penghasilanOrtu', 'ikutOrganisasi', 'ikutUKM'];
+        const transformedInput = {};
+        for (const key in req.body) {
+            if (categoricalAttributes.includes(key)) {
+                transformedInput[`${key}_kategori`] = req.body[key];
+            } else {
+                transformedInput[key] = req.body[key];
+            }
+        }
+
+        const { decision, path } = predict(trainedModel, transformedInput);
         res.status(200).json({ decision, path });
     } catch (error) {
         res.status(500).json({ message: "Gagal melakukan prediksi.", error: error.message });

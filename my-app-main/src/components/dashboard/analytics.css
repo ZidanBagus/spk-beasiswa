@@ -1,0 +1,110 @@
+/* Analytics Dashboard Styles */
+.analytics-card {
+    transition: all 0.3s ease;
+    border: none !important;
+}
+
+.analytics-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #117a8b 100%) !important;
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important;
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #bd2130 100%) !important;
+}
+
+/* Chart container improvements */
+.chart-container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
+
+/* Loading state improvements */
+.placeholder-glow .placeholder {
+    animation: placeholder-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes placeholder-glow {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.5;
+    }
+}
+
+/* Statistics panel enhancements */
+.statistics-panel .progress {
+    height: 8px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.statistics-panel .progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* Card hover effects */
+.shadow-sm:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .analytics-card {
+        margin-bottom: 1rem;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+}
+
+/* Badge improvements */
+.badge {
+    font-size: 0.75em;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+}
+
+/* Progress bar animations */
+.progress-bar {
+    transition: width 1s ease-in-out;
+}
+
+/* Custom scrollbar for statistics panel */
+.statistics-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.statistics-panel::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.statistics-panel::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.statistics-panel::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

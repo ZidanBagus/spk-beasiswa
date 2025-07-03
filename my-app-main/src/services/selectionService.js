@@ -57,6 +57,23 @@ const predictSingle = async (applicantData) => {
         throw error.response?.data || { message: 'Gagal melakukan prediksi.' };
     }
 };
+
+/**
+ * Fungsi untuk mengecek status model apakah sudah dilatih atau belum.
+ */
+const checkModelStatus = async () => {
+    try {
+        const response = await apiClient.get(`${API_PATH}/model-status`);
+        return response.data;
+    } catch (error) {
+        console.error("Error checking model status:", error.response?.data || error.message);
+        throw error.response?.data || { message: 'Gagal mengecek status model.' };
+    }
+};
+
+/**
+ * Fungsi untuk menguji model pada seluruh data.
+ */
 const testModelOnAllData = async () => {
     try {
         const response = await apiClient.post(`${API_PATH}/test-all`);
@@ -67,13 +84,42 @@ const testModelOnAllData = async () => {
     }
 };
 
+/**
+ * Fungsi untuk mendapatkan statistik model.
+ */
+const getModelStatistics = async () => {
+    try {
+        const response = await apiClient.get(`${API_PATH}/statistics`);
+        return response.data;
+    } catch (error) {
+        console.error("Error getting model statistics:", error.response?.data || error.message);
+        throw error.response?.data || { message: 'Gagal memuat statistik model.' };
+    }
+};
+
+/**
+ * Fungsi untuk reset model.
+ */
+const resetModel = async () => {
+    try {
+        const response = await apiClient.post(`${API_PATH}/reset`);
+        return response.data;
+    } catch (error) {
+        console.error("Error resetting model:", error.response?.data || error.message);
+        throw error.response?.data || { message: 'Gagal mereset model.' };
+    }
+};
+
 // Objek yang akan diekspor, berisi semua fungsi di atas
 const selectionService = {
   trainModel,
   testModel,
   getTreeVisualization,
   predictSingle,
-testModelOnAllData 
+  checkModelStatus,
+  testModelOnAllData,
+  getModelStatistics,
+  resetModel
 };
 
 export default selectionService;

@@ -11,6 +11,7 @@ import LoginPage from './pages/LoginPage.jsx';
 
 // Impor semua komponen halaman yang akan digunakan
 import DashboardPage from './pages/DashboardPage.jsx';
+import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage.jsx';
 import ApplicantManagementPage from './pages/ApplicantManagementPage.jsx';
 import AttributeSelectionPage from './pages/AttributeSelectionPage.jsx';
 import DataSplittingPage from './pages/DataSplittingPage.jsx';
@@ -22,7 +23,8 @@ import BatchHistoryPage from './pages/BatchHistoryPage.jsx';
 
 // --- 2. Daftarkan rute baru di sini ---
 const privateAppRoutes = [
-  { path: "/dashboard", element: <DashboardPage /> },
+  { path: "/dashboard", element: <AnalyticsDashboardPage /> },
+  { path: "/dashboard-old", element: <DashboardPage /> },
   { path: "/applicants", element: <ApplicantManagementPage /> },
   { path: "/attributes", element: <AttributeSelectionPage /> },
   { path: "/split-data", element: <DataSplittingPage /> },
