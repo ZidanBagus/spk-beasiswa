@@ -1,4 +1,4 @@
 // index.js - Main entry point for Vercel
-const app = require('./app.js');
+const app = require('./simple-app.js');
 
 module.exports = app;
