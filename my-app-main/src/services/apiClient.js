@@ -1,13 +1,28 @@
 // src/services/apiClient.js
 import axios from 'axios';
 
+// Get API base URL from environment
+const getApiBaseUrl = () => {
+  // For production build
+  if (import.meta.env.PROD) {
+    return import.meta.env.VITE_API_BASE_URL || 'https://backend-main-1g5va7log-zidan-bagus-setiawans-projects.vercel.app/api';
+  }
+  // For development
+  return import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+};
+
 // Instance axios yang dikonfigurasi secara terpusat
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api',
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
+
+// Debug log for API URL
+console.log('API Base URL:', getApiBaseUrl());
+console.log('Environment:', import.meta.env.MODE);
 
 // Request interceptor: Menambahkan token JWT ke setiap request secara otomatis
 apiClient.interceptors.request.use(
