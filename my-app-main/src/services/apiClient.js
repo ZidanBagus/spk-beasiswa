@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Instance axios yang dikonfigurasi secara terpusat
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5001/api', // Pastikan ini base URL backend Anda
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api',
   headers: {
     'Content-Type': 'application/json',
   },
