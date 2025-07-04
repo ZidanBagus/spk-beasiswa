@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "build": "echo 'No build step required'",
+    "vercel-build": "echo 'Ready for deployment'",
     "db:migrate": "npx sequelize-cli db:migrate",
     "db:seed:all": "npx sequelize-cli db:seed:all",
     "db:seed:undo:all": "npx sequelize-cli db:seed:undo:all",
