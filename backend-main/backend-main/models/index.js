@@ -10,10 +10,12 @@ const config = require(__dirname + '/../config/config.json')[env];
 const db = {};
 
 let sequelize;
-if (config.use_env_variable) {
+if (config && config.use_env_variable) {
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
+} else if (config) {
   sequelize = new Sequelize(config.database, config.username, config.password, config);
+} else {
+  throw new Error(`Database configuration for environment '${env}' not found`);
 }
 
 fs
