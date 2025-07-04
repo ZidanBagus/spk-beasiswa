@@ -1,8 +1,30 @@
 // Simple app for Vercel serverless
 const express = require('express');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { Sequelize } = require('sequelize');
 
 const app = express();
+
+// Database connection
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  },
+  logging: false
+});
+
+// User model
+const User = sequelize.define('User', {
+  username: { type: Sequelize.STRING, allowNull: false, unique: true },
+  password: { type: Sequelize.STRING, allowNull: false },
+  namaLengkap: { type: Sequelize.STRING, allowNull: false }
+});
 
 // Basic middleware
 app.use(cors());
@@ -20,11 +42,14 @@ app.get('/', (req, res) => {
 // Test database connection
 app.get('/test-db', async (req, res) => {
   try {
-    // Simple database test without models
+    await sequelize.authenticate();
+    const userCount = await User.count();
+    
     res.json({ 
-      message: 'Database test endpoint',
+      message: 'Database connection successful',
       database_url: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
-      jwt_secret: process.env.JWT_SECRET ? 'SET' : 'NOT SET'
+      jwt_secret: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
+      users_count: userCount
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -36,17 +61,48 @@ app.get('/api/auth/login', (req, res) => {
   res.json({ message: 'Login endpoint ready. Use POST method.' });
 });
 
-app.post('/api/auth/login', (req, res) => {
-  const { username, password } = req.body;
-  
-  if (username === 'admin' && (password === 'admin123' || password === 'admin')) {
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username dan password harus diisi' });
+    }
+    
+    // Find user in database
+    const user = await User.findOne({ where: { username } });
+    
+    if (!user) {
+      return res.status(401).json({ message: 'Username atau password salah' });
+    }
+    
+    // Check password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    
+    if (!isValidPassword) {
+      return res.status(401).json({ message: 'Username atau password salah' });
+    }
+    
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      process.env.JWT_SECRET || 'fallback-secret',
+      { expiresIn: '8h' }
+    );
+    
     res.json({
-      message: 'Login successful',
-      user: { id: 1, username: 'admin', namaLengkap: 'Administrator Sistem' },
-      token: 'jwt-token-' + Date.now()
+      message: 'Login berhasil',
+      user: {
+        id: user.id,
+        username: user.username,
+        namaLengkap: user.namaLengkap
+      },
+      token
     });
-  } else {
-    res.status(401).json({ message: 'Invalid credentials' });
+    
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan server' });
   }
 });
 
