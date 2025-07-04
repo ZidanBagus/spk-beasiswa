@@ -7,18 +7,6 @@ const API_URL_AUTH = '/auth/';
 
 const login = async (username, password) => {
   try {
-    // Demo mode - bypass backend for now
-    if (username === 'admin' && password === 'admin') {
-      const demoUser = { id: 1, username: 'admin', name: 'Administrator' };
-      const demoToken = 'demo-token-' + Date.now();
-      
-      localStorage.setItem('user', JSON.stringify(demoUser));
-      localStorage.setItem('token', demoToken);
-      
-      return { user: demoUser, token: demoToken };
-    }
-    
-    // Try backend login
     const response = await apiClient.post(API_URL_AUTH + 'login', {
       username,
       password,
@@ -30,18 +18,7 @@ const login = async (username, password) => {
     }
     return response.data;
   } catch (error) {
-    // Fallback to demo mode if backend fails
-    if (username === 'admin' && password === 'admin') {
-      const demoUser = { id: 1, username: 'admin', name: 'Administrator' };
-      const demoToken = 'demo-token-' + Date.now();
-      
-      localStorage.setItem('user', JSON.stringify(demoUser));
-      localStorage.setItem('token', demoToken);
-      
-      return { user: demoUser, token: demoToken };
-    }
-    
-    throw error.response?.data || { message: 'Login gagal. Username: admin, Password: admin' };
+    throw error.response?.data || { message: 'Login gagal. Periksa username dan password Anda.' };
   }
 };
 
