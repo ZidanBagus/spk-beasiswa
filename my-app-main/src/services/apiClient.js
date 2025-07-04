@@ -5,7 +5,7 @@ import axios from 'axios';
 const getApiBaseUrl = () => {
   // For production build
   if (import.meta.env.PROD) {
-    return import.meta.env.VITE_API_BASE_URL || 'https://backend-main-2gz6k11ux-zidan-bagus-setiawans-projects.vercel.app/api';
+    return import.meta.env.VITE_API_BASE_URL || 'https://backend-main-fu95rqmlg-zidan-bagus-setiawans-projects.vercel.app/api';
   }
   // For development
   return import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
