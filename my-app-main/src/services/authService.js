@@ -7,27 +7,41 @@ const API_URL_AUTH = '/auth/';
 
 const login = async (username, password) => {
   try {
-    // Menggunakan apiClient, bukan axios langsung.
-    // Path sekarang hanya endpoint spesifik, bukan URL lengkap.
+    // Demo mode - bypass backend for now
+    if (username === 'admin' && password === 'admin') {
+      const demoUser = { id: 1, username: 'admin', name: 'Administrator' };
+      const demoToken = 'demo-token-' + Date.now();
+      
+      localStorage.setItem('user', JSON.stringify(demoUser));
+      localStorage.setItem('token', demoToken);
+      
+      return { user: demoUser, token: demoToken };
+    }
+    
+    // Try backend login
     const response = await apiClient.post(API_URL_AUTH + 'login', {
       username,
       password,
     });
 
-    // Jika login berhasil dan backend mengembalikan token dan data user
     if (response.data && response.data.token && response.data.user) {
-      // Simpan token dan data user ke localStorage
       localStorage.setItem('user', JSON.stringify(response.data.user));
       localStorage.setItem('token', response.data.token);
-      // Anda bisa juga mengupdate state global di sini jika menggunakan Redux/Zustand,
-      // tapi untuk Context API, pembaruan state biasanya dilakukan di dalam AuthContext.
     }
-    return response.data; // Kembalikan seluruh data respons (termasuk user dan token)
+    return response.data;
   } catch (error) {
-    // apiClient.interceptors.response seharusnya sudah menangani error global seperti 401,
-    // tapi kita tetap bisa melempar error spesifik dari sini jika perlu.
-    // error.response.data biasanya berisi pesan error dari backend.
-    throw error.response?.data || { message: 'Login gagal. Terjadi kesalahan jaringan atau server tidak merespons.' };
+    // Fallback to demo mode if backend fails
+    if (username === 'admin' && password === 'admin') {
+      const demoUser = { id: 1, username: 'admin', name: 'Administrator' };
+      const demoToken = 'demo-token-' + Date.now();
+      
+      localStorage.setItem('user', JSON.stringify(demoUser));
+      localStorage.setItem('token', demoToken);
+      
+      return { user: demoUser, token: demoToken };
+    }
+    
+    throw error.response?.data || { message: 'Login gagal. Username: admin, Password: admin' };
   }
 };
 
