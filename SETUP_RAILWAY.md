@@ -9,22 +9,30 @@
 ## 2. Deploy Backend
 
 ### Option 1: Deploy dari GitHub
-1. Connect GitHub repository
-2. Select `railway-backend` folder
-3. Railway akan auto-deploy
+1. Buka [railway.app](https://railway.app)
+2. **New Project** → **Deploy from GitHub repo**
+3. **Select repository**: `spk-beasiswa`
+4. **PENTING**: Set **Root Directory** ke `railway-backend`
+5. Railway akan auto-deploy
 
 ### Option 2: Deploy Manual
 ```bash
-# Install Railway CLI
+# Install Railway CLI (jika Node.js sudah v18.17+)
 npm install -g @railway/cli
 
 # Login
 railway login
 
-# Deploy
+# Deploy dari folder railway-backend
 cd railway-backend
 railway deploy
 ```
+
+### Option 3: Deploy via Web (Recommended)
+1. Zip folder `railway-backend`
+2. Upload ke Railway dashboard
+3. Set environment variables
+4. Deploy
 
 ## 3. Environment Variables
 
