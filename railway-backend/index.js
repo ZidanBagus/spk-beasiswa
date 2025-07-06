@@ -627,12 +627,12 @@ app.post('/api/selection/train', async (req, res) => {
 
     // Mock training process
     calculationSteps = [
-      { step: 1, description: 'Menghitung entropy dataset', value: 0.97 },
-      { step: 2, description: 'Menghitung information gain untuk IPK', value: 0.42 },
-      { step: 3, description: 'Menghitung information gain untuk Penghasilan Ortu', value: 0.38 },
-      { step: 4, description: 'Memilih IPK sebagai root node', value: 'IPK' },
-      { step: 5, description: 'Membangun subtree untuk IPK >= 3.5', value: 'Penghasilan Ortu' },
-      { step: 6, description: 'Membangun subtree untuk IPK < 3.5', value: 'Organisasi' }
+      { step: 1, description: 'Menghitung entropy dataset', value: 0.97, attribute: 'dataset' },
+      { step: 2, description: 'Menghitung information gain untuk IPK', value: 0.42, attribute: 'ipk' },
+      { step: 3, description: 'Menghitung information gain untuk Penghasilan Ortu', value: 0.38, attribute: 'penghasilanOrtu' },
+      { step: 4, description: 'Memilih IPK sebagai root node', value: 0.42, attribute: 'ipk' },
+      { step: 5, description: 'Membangun subtree untuk IPK >= 3.5', value: 0.35, attribute: 'penghasilanOrtu' },
+      { step: 6, description: 'Membangun subtree untuk IPK < 3.5', value: 0.28, attribute: 'ikutOrganisasi' }
     ];
 
     trainedModel = buildMockTree(trainingApplicants, selectedAttributeNames);
@@ -827,15 +827,15 @@ app.get('/api/selection/visualize', async (req, res) => {
   try {
     const treeVisualization = {
       nodes: [
-        { id: 1, label: 'IPK', type: 'root' },
-        { id: 2, label: 'IPK >= 3.5', type: 'branch' },
-        { id: 3, label: 'IPK < 3.5', type: 'branch' },
-        { id: 4, label: 'Penghasilan Ortu', type: 'internal' },
-        { id: 5, label: 'Organisasi', type: 'internal' },
-        { id: 6, label: 'Terima (92%)', type: 'leaf' },
-        { id: 7, label: 'Tidak (78%)', type: 'leaf' },
-        { id: 8, label: 'Terima (65%)', type: 'leaf' },
-        { id: 9, label: 'Tidak (88%)', type: 'leaf' }
+        { id: 1, label: 'IPK', type: 'root', confidence: 1.0 },
+        { id: 2, label: 'IPK >= 3.5', type: 'branch', confidence: 0.85 },
+        { id: 3, label: 'IPK < 3.5', type: 'branch', confidence: 0.75 },
+        { id: 4, label: 'Penghasilan Ortu', type: 'internal', confidence: 0.80 },
+        { id: 5, label: 'Organisasi', type: 'internal', confidence: 0.70 },
+        { id: 6, label: 'Terima', type: 'leaf', confidence: 0.92 },
+        { id: 7, label: 'Tidak', type: 'leaf', confidence: 0.78 },
+        { id: 8, label: 'Terima', type: 'leaf', confidence: 0.65 },
+        { id: 9, label: 'Tidak', type: 'leaf', confidence: 0.88 }
       ],
       edges: [
         { from: 1, to: 2 }, { from: 1, to: 3 },
@@ -845,10 +845,17 @@ app.get('/api/selection/visualize', async (req, res) => {
       ]
     };
     
+    const safeSteps = calculationSteps.map(step => ({
+      step: step.step || 0,
+      description: step.description || '',
+      value: typeof step.value === 'number' ? step.value : 0,
+      attribute: step.attribute || ''
+    }));
+    
     res.json({
       tree: trainedModel,
       visualization: treeVisualization,
-      steps: calculationSteps
+      steps: safeSteps
     });
   } catch (error) {
     res.status(500).json({ message: "Gagal membuat visualisasi pohon.", error: error.message });
