@@ -32,7 +32,7 @@ const sequelize = new Sequelize(process.env.DATABASE_URL || 'postgresql://neondb
   logging: false
 });
 
-// Models
+// Models - EXACT SAME as local backend
 const User = sequelize.define('User', {
   username: { type: Sequelize.STRING, allowNull: false, unique: true },
   password: { type: Sequelize.STRING, allowNull: false },
@@ -40,13 +40,20 @@ const User = sequelize.define('User', {
 }, { tableName: 'Users' });
 
 const Applicant = sequelize.define('Applicant', {
-  nama: { type: Sequelize.STRING, allowNull: false },
-  nim: { type: Sequelize.STRING, allowNull: false, unique: true },
-  ipk: { type: Sequelize.FLOAT },
-  penghasilanOrtu: { type: Sequelize.INTEGER },
-  jmlTanggungan: { type: Sequelize.INTEGER },
-  ikutOrganisasi: { type: Sequelize.STRING },
-  ikutUKM: { type: Sequelize.STRING }
+  nama: Sequelize.STRING,
+  prodi: Sequelize.STRING,
+  jenisKelamin: Sequelize.STRING,
+  jarakKampus: Sequelize.STRING,
+  asalSekolah: Sequelize.STRING,
+  ipk: Sequelize.FLOAT,
+  penghasilanOrtu: Sequelize.STRING,
+  jmlTanggungan: Sequelize.INTEGER,
+  pekerjaanOrtu: Sequelize.STRING,
+  ikutOrganisasi: Sequelize.STRING,
+  ikutUKM: Sequelize.STRING,
+  tahunLulus: Sequelize.INTEGER,
+  sks: Sequelize.INTEGER,
+  statusBeasiswa: Sequelize.STRING
 }, { tableName: 'Applicants' });
 
 const SelectionAttribute = sequelize.define('SelectionAttribute', {
@@ -55,12 +62,94 @@ const SelectionAttribute = sequelize.define('SelectionAttribute', {
   isSelected: { type: Sequelize.BOOLEAN, defaultValue: false }
 }, { tableName: 'SelectionAttributes' });
 
+// Field configuration - EXACT SAME as local backend
+const fieldConfig = {
+  nama: { excelKeys: ['nama lengkap', 'nama'], type: 'string', default: 'Tanpa Nama' },
+  prodi: { excelKeys: ['prodi'], type: 'string', default: '' },
+  jenisKelamin: { excelKeys: ['jenis kelamin'], type: 'string', default: '' },
+  jarakKampus: { excelKeys: ['jarak tempat tinggal kekampus (km)', 'jarak kampus', 'jarak'], type: 'string', default: '' },
+  asalSekolah: { excelKeys: ['asal sekolah'], type: 'string', default: '' },
+  tahunLulus: { excelKeys: ['tahun lulus'], type: 'integer', default: null },
+  sks: { excelKeys: ['sks'], type: 'integer', default: 0 },
+  ikutOrganisasi: { excelKeys: ['ikut organisasi'], type: 'customBoolean', default: 'Tidak' },
+  ikutUKM: { excelKeys: ['ikut ukm'], type: 'customBoolean', default: 'Tidak' },
+  ipk: { excelKeys: ['ipk'], type: 'float', default: 0.0 },
+  pekerjaanOrtu: { excelKeys: ['pekerjaan orang tua', 'pekerjaan ortu'], type: 'string', default: '' },
+  penghasilanOrtu: { excelKeys: ['penghasilan'], type: 'string', default: 'Tidak Diketahui' },
+  jmlTanggungan: { excelKeys: ['tanggungan'], type: 'integer', default: 0 },
+  statusBeasiswa: { excelKeys: ['status beasiswa'], type: 'string', default: 'Ditolak' },
+};
+
+// Parse Excel function - EXACT SAME as local backend
+const parseExcelData = (buffer) => {
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+    if (jsonData.length === 0) {
+        throw new Error('File Excel kosong atau tidak ada data yang dapat dibaca setelah header.');
+    }
+
+    const parsedApplicants = jsonData.map((row) => {
+        const newApp = {};
+        const rowKeysOriginal = Object.keys(row);
+        const headerMap = {};
+        rowKeysOriginal.forEach(key => {
+            headerMap[String(key).toLowerCase().trim()] = key;
+        });
+
+        for (const internalKey in fieldConfig) {
+            const config = fieldConfig[internalKey];
+            let actualExcelValue = undefined;
+            let valueFound = false;
+
+            newApp[internalKey] = config.default;
+
+            for (const excelKeyOption of config.excelKeys) {
+                const normalizedKey = excelKeyOption.toLowerCase().trim();
+                if (headerMap.hasOwnProperty(normalizedKey)) {
+                    const originalHeader = headerMap[normalizedKey];
+                    actualExcelValue = row[originalHeader];
+                    valueFound = true;
+                    break;
+                }
+            }
+
+            if (valueFound && actualExcelValue !== null && actualExcelValue !== undefined) {
+                const valStr = String(actualExcelValue).trim();
+                if (valStr !== "") {
+                    switch (config.type) {
+                        case 'string':
+                            newApp[internalKey] = valStr;
+                            break;
+                        case 'float':
+                            const floatVal = parseFloat(valStr.replace(',', '.'));
+                            newApp[internalKey] = isNaN(floatVal) ? config.default : floatVal;
+                            break;
+                        case 'integer':
+                            const intVal = parseInt(valStr.replace(/[^0-9]/g, ''), 10);
+                            newApp[internalKey] = isNaN(intVal) ? config.default : intVal;
+                            break;
+                        case 'customBoolean':
+                            newApp[internalKey] = ['ikut', 'ya', 'iya', 'yes', 'true', '1'].includes(valStr.toLowerCase()) ? 'Ya' : 'Tidak';
+                            break;
+                    }
+                }
+            }
+        }
+        return newApp;
+    });
+
+    return parsedApplicants;
+};
+
 // Routes
 app.get('/', (req, res) => {
   res.json({ message: 'SPK Beasiswa API - Railway', status: 'OK' });
 });
 
-// Auth
+// Auth - EXACT SAME as local
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -94,15 +183,23 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Stats
+// Stats - EXACT SAME as local
 app.get('/api/applicants/stats', async (req, res) => {
   try {
+    const today = new Date();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 7);
+    const startOfSevenDaysAgo = new Date(sevenDaysAgo.getFullYear(), sevenDaysAgo.getMonth(), sevenDaysAgo.getDate());
+
+    const applicantsToday = await Applicant.count({ where: { createdAt: { [Sequelize.Op.gte]: startOfToday } } });
+    const applicantsLast7Days = await Applicant.count({ where: { createdAt: { [Sequelize.Op.gte]: startOfSevenDaysAgo } } });
     const totalApplicants = await Applicant.count();
-    
+
     res.json({
       totalApplicants,
-      applicantsToday: 0,
-      applicantsLast7Days: 0
+      applicantsToday,
+      applicantsLast7Days
     });
   } catch (error) {
     res.json({
@@ -113,24 +210,36 @@ app.get('/api/applicants/stats', async (req, res) => {
   }
 });
 
-// Applicants
+// Applicants - EXACT SAME as local
 app.get('/api/applicants', async (req, res) => {
   try {
     const { page = 1, limit = 10, search = '' } = req.query;
-    const offset = (page - 1) * limit;
-    
-    // Simple query without complex where clause
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    let whereClause = {};
+    if (search) {
+      whereClause = {
+        [Sequelize.Op.or]: [
+          { nama: { [Sequelize.Op.iLike]: `%${search}%` } },
+          { prodi: { [Sequelize.Op.iLike]: `%${search}%` } },
+          { asalSekolah: { [Sequelize.Op.iLike]: `%${search}%` } },
+          { statusBeasiswa: { [Sequelize.Op.iLike]: `%${search}%` } },
+        ]
+      };
+    }
+
     const { count, rows } = await Applicant.findAndCountAll({
+      where: whereClause,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['id', 'DESC']]
+      order: [['id', 'ASC']]
     });
-    
+
     res.json({
-      applicants: rows,
       totalItems: count,
-      currentPage: parseInt(page),
-      totalPages: Math.ceil(count / limit)
+      applicants: rows,
+      totalPages: Math.ceil(count / parseInt(limit)),
+      currentPage: parseInt(page)
     });
   } catch (error) {
     console.error('Applicants error:', error);
@@ -140,56 +249,86 @@ app.get('/api/applicants', async (req, res) => {
 
 app.post('/api/applicants', async (req, res) => {
   try {
-    const applicant = await Applicant.create(req.body);
-    res.status(201).json({
-      message: 'Applicant created successfully',
-      applicant
-    });
+    const newApplicant = await Applicant.create(req.body);
+    res.status(201).json({ message: 'Data pendaftar berhasil ditambahkan.', applicant: newApplicant });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error menambah pendaftar:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan pada server.', error: error.message });
   }
 });
 
-// Upload Excel file
-app.post('/api/applicants/upload', upload.single('excelFile'), async (req, res) => {
+app.get('/api/applicants/:id', async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+    const applicant = await Applicant.findByPk(req.params.id);
+    if (!applicant) {
+      return res.status(404).json({ message: 'Data pendaftar tidak ditemukan.' });
     }
-
-    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const data = XLSX.utils.sheet_to_json(worksheet);
-
-    let importedCount = 0;
-    for (const row of data) {
-      try {
-        await Applicant.create({
-          nama: row.nama || row.Nama,
-          nim: row.nim || row.NIM,
-          ipk: parseFloat(row.ipk || row.IPK),
-          penghasilanOrtu: parseInt(row.penghasilanOrtu || row['Penghasilan Ortu']),
-          jmlTanggungan: parseInt(row.jmlTanggungan || row['Jumlah Tanggungan']),
-          ikutOrganisasi: row.ikutOrganisasi || row['Ikut Organisasi'],
-          ikutUKM: row.ikutUKM || row['Ikut UKM']
-        });
-        importedCount++;
-      } catch (err) {
-        console.log('Skip duplicate:', row.nim);
-      }
-    }
-
-    res.json({
-      message: `Successfully imported ${importedCount} applicants`,
-      importedCount
-    });
+    res.json(applicant);
   } catch (error) {
-    res.status(500).json({ message: 'Upload failed: ' + error.message });
+    res.status(500).json({ message: 'Terjadi kesalahan pada server.', error: error.message });
   }
 });
 
-// Attributes
+app.put('/api/applicants/:id', async (req, res) => {
+  try {
+    const applicant = await Applicant.findByPk(req.params.id);
+    if (!applicant) {
+      return res.status(404).json({ message: 'Data pendaftar tidak ditemukan.' });
+    }
+    await applicant.update(req.body);
+    res.json({ message: 'Data pendaftar berhasil diperbarui.', applicant });
+  } catch (error) {
+    console.error('Error mengupdate pendaftar:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan pada server.', error: error.message });
+  }
+});
+
+app.delete('/api/applicants/:id', async (req, res) => {
+  try {
+    const applicant = await Applicant.findByPk(req.params.id);
+    if (!applicant) {
+      return res.status(404).json({ message: 'Data pendaftar tidak ditemukan.' });
+    }
+    await applicant.destroy();
+    res.json({ message: 'Data pendaftar berhasil dihapus.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Terjadi kesalahan pada server.', error: error.message });
+  }
+});
+
+// Upload Excel - EXACT SAME as local backend
+app.post('/api/applicants/upload', upload.single('excelFile'), async (req, res) => {
+  if (!req.file || !req.file.buffer) {
+    return res.status(400).json({ message: "File tidak ditemukan." });
+  }
+
+  try {
+    let applicantsData = parseExcelData(req.file.buffer);
+    applicantsData = applicantsData.filter(app => app.nama && String(app.nama).trim() !== '');
+
+    if (!applicantsData || applicantsData.length === 0) {
+      return res.status(400).json({ message: "Tidak ada data valid yang bisa diproses. Pastikan kolom 'nama lengkap' dan 'status beasiswa' terisi." });
+    }
+
+    const createdApplicants = await Applicant.bulkCreate(applicantsData, {
+      validate: true,
+      fields: Object.keys(fieldConfig)
+    });
+
+    res.status(201).json({
+      message: `Berhasil mengimpor dan menyimpan ${createdApplicants.length} data pendaftar.`,
+      importedCount: createdApplicants.length,
+    });
+  } catch (error) {
+    console.error('Error di endpoint uploadApplicants:', error);
+    res.status(500).json({
+      message: 'Terjadi kesalahan pada server saat mengimpor data.',
+      error: error.message || 'Error tidak diketahui'
+    });
+  }
+});
+
+// Attributes - EXACT SAME as local
 app.get('/api/attributes', async (req, res) => {
   try {
     const attributes = await SelectionAttribute.findAll({
@@ -198,20 +337,37 @@ app.get('/api/attributes', async (req, res) => {
     
     res.json({ attributes });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
 });
 
-// Reports
+app.put('/api/attributes', async (req, res) => {
+  try {
+    const { attributes } = req.body;
+
+    for (const attr of attributes) {
+      await SelectionAttribute.update(
+        { isSelected: attr.isSelected },
+        { where: { id: attr.id } }
+      );
+    }
+
+    res.json({ message: 'Attributes updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error: ' + error.message });
+  }
+});
+
+// Reports - EXACT SAME as local
 app.get('/api/reports', async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
-    const offset = (page - 1) * limit;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
     
     const { count, rows } = await Applicant.findAndCountAll({
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['createdAt', 'DESC']]
+      order: [['id', 'ASC']]
     });
     
     // Mock selection results
@@ -227,7 +383,7 @@ app.get('/api/reports', async (req, res) => {
       total: count,
       page: parseInt(page),
       limit: parseInt(limit),
-      totalPages: Math.ceil(count / limit)
+      totalPages: Math.ceil(count / parseInt(limit))
     });
   } catch (error) {
     res.json({
@@ -240,7 +396,7 @@ app.get('/api/reports', async (req, res) => {
   }
 });
 
-// Selection
+// Selection - EXACT SAME as local
 app.post('/api/selection', async (req, res) => {
   try {
     const totalApplicants = await Applicant.count();
