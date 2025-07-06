@@ -662,9 +662,16 @@ app.delete('/api/applicants/:id', async (req, res) => {
     if (!applicant) {
       return res.status(404).json({ message: 'Data pendaftar tidak ditemukan.' });
     }
+    
+    // Delete related selection results first
+    await SelectionResult.destroy({ where: { applicantId: req.params.id } });
+    
+    // Then delete the applicant
     await applicant.destroy();
+    
     res.json({ message: 'Data pendaftar berhasil dihapus.' });
   } catch (error) {
+    console.error('Delete error:', error);
     res.status(500).json({ message: 'Terjadi kesalahan pada server.', error: error.message });
   }
 });
