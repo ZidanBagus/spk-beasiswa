@@ -1134,27 +1134,37 @@ app.post('/api/selection/predict-single', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Railway Backend running on port ${PORT}`);
   
-  sequelize.sync({ force: true }).then(async () => {
+  sequelize.sync({ force: false }).then(async () => {
     console.log('📊 Database synced');
     
     try {
-      await User.create({
-        username: 'admin',
-        password: 'admin123',
-        namaLengkap: 'Administrator Sistem'
-      });
+      // Check if admin user exists
+      const existingUser = await User.findOne({ where: { username: 'admin' } });
+      if (!existingUser) {
+        await User.create({
+          username: 'admin',
+          password: 'admin123',
+          namaLengkap: 'Administrator Sistem'
+        });
+        console.log('✅ Admin user created');
+      }
       
-      await SelectionAttribute.bulkCreate([
-        { attributeName: 'ipk', displayName: 'IPK', isSelected: true },
-        { attributeName: 'penghasilanOrtu', displayName: 'Penghasilan Orang Tua', isSelected: true },
-        { attributeName: 'jmlTanggungan', displayName: 'Jumlah Tanggungan', isSelected: true },
-        { attributeName: 'ikutOrganisasi', displayName: 'Keikutsertaan Organisasi', isSelected: true },
-        { attributeName: 'ikutUKM', displayName: 'Keikutsertaan UKM', isSelected: true }
-      ]);
+      // Check if attributes exist
+      const existingAttributes = await SelectionAttribute.count();
+      if (existingAttributes === 0) {
+        await SelectionAttribute.bulkCreate([
+          { attributeName: 'ipk', displayName: 'IPK', isSelected: true },
+          { attributeName: 'penghasilanOrtu', displayName: 'Penghasilan Orang Tua', isSelected: true },
+          { attributeName: 'jmlTanggungan', displayName: 'Jumlah Tanggungan', isSelected: true },
+          { attributeName: 'ikutOrganisasi', displayName: 'Keikutsertaan Organisasi', isSelected: true },
+          { attributeName: 'ikutUKM', displayName: 'Keikutsertaan UKM', isSelected: true }
+        ]);
+        console.log('✅ Selection attributes created');
+      }
       
-      console.log('✅ Database seeded');
+      console.log('✅ Database initialization complete');
     } catch (err) {
-      console.log('⚠️ Seed data already exists');
+      console.log('⚠️ Database initialization error:', err.message);
     }
   }).catch(err => {
     console.error('❌ Database error:', err);
