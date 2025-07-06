@@ -27,7 +27,7 @@ router.use(protect); // Terapkan middleware protect ke semua rute di bawah ini
 // Rute CRUD yang sudah ada
 router.post('/', applicantController.createApplicant);
 router.get('/', applicantController.getAllApplicants);
-router.get('/stats/summary', applicantController.getApplicantStats); // Rute statistik
+router.get('/stats', applicantController.getApplicantStats); // Rute statistik
 router.get('/:id', applicantController.getApplicantById);
 router.put('/:id', applicantController.updateApplicant);
 router.delete('/:id', applicantController.deleteApplicant);
