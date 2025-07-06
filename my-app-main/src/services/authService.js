@@ -7,7 +7,7 @@ const authService = {
   async login(username, password) {
     try {
       // For Railway backend, the endpoint is /auth/login
-      const response = await apiClient.post('/auth/login', {
+      const response = await apiClient.post('auth/login', {
         username,
         password,
       });
