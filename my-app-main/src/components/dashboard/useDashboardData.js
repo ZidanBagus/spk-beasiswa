@@ -35,48 +35,19 @@ const useDashboardData = () => {
 
     const processDoughnutData = useCallback((attribute, results) => {
         const config = chartConfig[attribute];
-        const data = [0, 0]; // [Ikut, Tidak Ikut]
+        const chartData = createDefaultChartData(config.labels, config.colors);
+        
         results.forEach(item => {
-            if (item.statusKelulusan === 'Terima') {
-                if (item[attribute] === 'Ya') {
-                    data[0]++;
-                } else {
-                    data[1]++;
-                }
+            const category = item[attribute] === 'Ya' ? 'Ya' : 'Tidak';
+            const index = config.labels.indexOf(category);
+            if (index > -1) {
+                const status = (item.statusKelulusan || '').trim();
+                if (status === 'Terima') chartData.datasets[0].data[index]++;
+                else if (status === 'Tidak') chartData.datasets[1].data[index]++;
             }
         });
-        return {
-            labels: config.labels,
-            datasets: [{
-                data: data,
-                backgroundColor: config.colors,
-                borderColor: '#fff',
-                borderWidth: 2,
-            }]
-        };
-    }, []);
-
-    const processDoughnutData = useCallback((attribute, results) => {
-        const config = chartConfig[attribute];
-        const data = [0, 0]; // [Ikut, Tidak Ikut]
-        results.forEach(item => {
-            if (item.statusKelulusan === 'Terima') {
-                if (item[attribute] === 'Ya') {
-                    data[0]++;
-                } else {
-                    data[1]++;
-                }
-            }
-        });
-        return {
-            labels: config.labels,
-            datasets: [{
-                data: data,
-                backgroundColor: config.colors,
-                borderColor: '#fff',
-                borderWidth: 2,
-            }]
-        };
+        
+        return chartData;
     }, []);
 
     const fetchData = useCallback(async () => {
