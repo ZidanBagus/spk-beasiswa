@@ -38,6 +38,27 @@ const authService = {
 
   isAuthenticated() {
     return !!this.getToken();
+  },
+
+  async fetchCurrentUserFromServer() {
+    try {
+      const token = this.getToken();
+      if (!token) {
+        throw new Error('No token available');
+      }
+      
+      // For now, return the user from localStorage
+      // In a real app, you might want to validate token with server
+      const user = this.getCurrentUser();
+      if (user) {
+        return { user, token };
+      }
+      
+      throw new Error('No user data available');
+    } catch (error) {
+      this.logout(); // Clear invalid data
+      throw error;
+    }
   }
 };
 
