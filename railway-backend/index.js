@@ -266,9 +266,32 @@ app.post('/api/selection', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Railway Backend running on port ${PORT}`);
   
-  // Initialize database
-  sequelize.sync().then(() => {
-    console.log('📊 Database connected');
+  // Initialize database with force sync and seed data
+  sequelize.sync({ force: true }).then(async () => {
+    console.log('📊 Database synced');
+    
+    // Seed initial data
+    try {
+      // Create admin user
+      await User.create({
+        username: 'admin',
+        password: 'admin123',
+        namaLengkap: 'Administrator Sistem'
+      });
+      
+      // Create selection attributes
+      await SelectionAttribute.bulkCreate([
+        { attributeName: 'ipk', displayName: 'IPK', isSelected: true },
+        { attributeName: 'penghasilanOrtu', displayName: 'Penghasilan Orang Tua', isSelected: true },
+        { attributeName: 'jmlTanggungan', displayName: 'Jumlah Tanggungan', isSelected: true },
+        { attributeName: 'ikutOrganisasi', displayName: 'Keikutsertaan Organisasi', isSelected: true },
+        { attributeName: 'ikutUKM', displayName: 'Keikutsertaan UKM', isSelected: true }
+      ]);
+      
+      console.log('✅ Database seeded');
+    } catch (err) {
+      console.log('⚠️ Seed data already exists');
+    }
   }).catch(err => {
     console.error('❌ Database error:', err);
   });
