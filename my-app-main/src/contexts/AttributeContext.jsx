@@ -15,7 +15,9 @@ export const AttributeProvider = ({ children }) => {
     setIsLoadingAttributes(true);
     try {
       const data = await attributeService.getAllAttributes();
-      setAttributes(data || []);
+      // Handle both {attributes: []} and direct array response
+      const attributesArray = data.attributes || data || [];
+      setAttributes(attributesArray);
     } catch (error) {
       console.error("AttributeContext: Gagal memuat atribut", error);
       setAttributes([]); // Set ke array kosong jika gagal
