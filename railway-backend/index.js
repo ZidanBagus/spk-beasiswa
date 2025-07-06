@@ -447,7 +447,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Stats
+// Dashboard Analytics - Real Data
 app.get('/api/applicants/stats', async (req, res) => {
   try {
     const today = new Date();
@@ -460,16 +460,125 @@ app.get('/api/applicants/stats', async (req, res) => {
     const applicantsLast7Days = await Applicant.count({ where: { createdAt: { [Sequelize.Op.gte]: startOfSevenDaysAgo } } });
     const totalApplicants = await Applicant.count();
 
+    // Selection Results Statistics
+    const totalResults = await SelectionResult.count();
+    const acceptedResults = await SelectionResult.count({ where: { statusKelulusan: 'Terima' } });
+    const rejectedResults = await SelectionResult.count({ where: { statusKelulusan: 'Tidak' } });
+    const acceptanceRate = totalResults > 0 ? ((acceptedResults / totalResults) * 100).toFixed(1) : 0;
+
+    // IPK Analysis
+    const highIPKApplicants = await Applicant.count({ where: { ipk: { [Sequelize.Op.gte]: 3.5 } } });
+    const highIPKAccepted = await SelectionResult.count({ 
+      where: { 
+        statusKelulusan: 'Terima',
+        ipk: { [Sequelize.Op.gte]: 3.5 }
+      } 
+    });
+    const highIPKRate = highIPKApplicants > 0 ? ((highIPKAccepted / highIPKApplicants) * 100).toFixed(1) : 0;
+
+    // Penghasilan Analysis
+    const lowIncomeApplicants = await Applicant.count({ 
+      where: { 
+        penghasilanOrtu: { [Sequelize.Op.in]: ['Rendah', 'rendah', 'Kurang dari 2 juta'] }
+      } 
+    });
+    const lowIncomeAccepted = await SelectionResult.count({ 
+      where: { 
+        statusKelulusan: 'Terima',
+        penghasilanOrtu: { [Sequelize.Op.in]: ['Rendah', 'rendah', 'Kurang dari 2 juta'] }
+      } 
+    });
+    const lowIncomeRate = lowIncomeApplicants > 0 ? ((lowIncomeAccepted / lowIncomeApplicants) * 100).toFixed(1) : 0;
+
+    // Organisasi Analysis
+    const orgApplicants = await Applicant.count({ where: { ikutOrganisasi: 'Ya' } });
+    const orgAccepted = await SelectionResult.count({ 
+      where: { 
+        statusKelulusan: 'Terima',
+        ikutOrganisasi: 'Ya'
+      } 
+    });
+    const orgRate = orgApplicants > 0 ? ((orgAccepted / orgApplicants) * 100).toFixed(1) : 0;
+
+    // Monthly trend (last 6 months)
+    const monthlyData = [];
+    for (let i = 5; i >= 0; i--) {
+      const monthStart = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const monthEnd = new Date(today.getFullYear(), today.getMonth() - i + 1, 0);
+      const monthCount = await Applicant.count({
+        where: {
+          createdAt: {
+            [Sequelize.Op.gte]: monthStart,
+            [Sequelize.Op.lte]: monthEnd
+          }
+        }
+      });
+      monthlyData.push({
+        month: monthStart.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }),
+        count: monthCount
+      });
+    }
+
     res.json({
+      // Basic stats
       totalApplicants,
       applicantsToday,
-      applicantsLast7Days
+      applicantsLast7Days,
+      
+      // Selection statistics
+      selectionStats: {
+        total: totalResults,
+        accepted: acceptedResults,
+        rejected: rejectedResults,
+        acceptanceRate: parseFloat(acceptanceRate)
+      },
+      
+      // Category analysis
+      categoryAnalysis: {
+        highIPK: {
+          total: highIPKApplicants,
+          accepted: highIPKAccepted,
+          rate: parseFloat(highIPKRate),
+          label: 'IPK ≥ 3.5'
+        },
+        lowIncome: {
+          total: lowIncomeApplicants,
+          accepted: lowIncomeAccepted,
+          rate: parseFloat(lowIncomeRate),
+          label: 'Penghasilan Rendah'
+        },
+        organization: {
+          total: orgApplicants,
+          accepted: orgAccepted,
+          rate: parseFloat(orgRate),
+          label: 'Aktif Organisasi'
+        }
+      },
+      
+      // Trend data
+      trendData: monthlyData,
+      
+      // Best category
+      bestCategory: {
+        name: highIPKRate >= lowIncomeRate && highIPKRate >= orgRate ? 'IPK ≥ 3.5' : 
+              lowIncomeRate >= orgRate ? 'Penghasilan Rendah' : 'Aktif Organisasi',
+        rate: Math.max(parseFloat(highIPKRate), parseFloat(lowIncomeRate), parseFloat(orgRate))
+      }
     });
   } catch (error) {
+    console.error('Stats error:', error);
     res.json({
       totalApplicants: 0,
       applicantsToday: 0,
-      applicantsLast7Days: 0
+      applicantsLast7Days: 0,
+      selectionStats: { total: 0, accepted: 0, rejected: 0, acceptanceRate: 0 },
+      categoryAnalysis: {
+        highIPK: { total: 0, accepted: 0, rate: 0, label: 'IPK ≥ 3.5' },
+        lowIncome: { total: 0, accepted: 0, rate: 0, label: 'Penghasilan Rendah' },
+        organization: { total: 0, accepted: 0, rate: 0, label: 'Aktif Organisasi' }
+      },
+      trendData: [],
+      bestCategory: { name: 'Belum ada data', rate: 0 }
     });
   }
 });
