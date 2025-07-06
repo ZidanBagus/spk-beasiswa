@@ -1,16 +1,20 @@
 {
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/api/auth/login",
-      "destination": "/api/login"
-    },
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
     {
-      "source": "/api/applicants/stats",
-      "destination": "/api/stats"
-    },
-    {
-      "source": "/",
-      "destination": "/api/index"
+      "src": "/api/(.*)",
+      "headers": {
+        "Access-Control-Allow-Origin": "https://spk-beasiswa-new.vercel.app",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Authorization"
+      },
+      "dest": "/api/$1"
     }
   ]
 }
