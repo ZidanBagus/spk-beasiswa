@@ -74,9 +74,13 @@ supabase login
 cd supabase-backend
 supabase link --project-ref YOUR_PROJECT_REF
 
-# Deploy functions
+# Deploy all functions
 supabase functions deploy auth
 supabase functions deploy stats
+supabase functions deploy applicants
+supabase functions deploy attributes
+supabase functions deploy reports
+supabase functions deploy selection
 ```
 
 ## 4. Get API URLs
@@ -84,6 +88,10 @@ supabase functions deploy stats
 Setelah deploy, Edge Functions akan tersedia di:
 - Auth: `https://YOUR_PROJECT_REF.supabase.co/functions/v1/auth`
 - Stats: `https://YOUR_PROJECT_REF.supabase.co/functions/v1/stats`
+- Applicants: `https://YOUR_PROJECT_REF.supabase.co/functions/v1/applicants`
+- Attributes: `https://YOUR_PROJECT_REF.supabase.co/functions/v1/attributes`
+- Reports: `https://YOUR_PROJECT_REF.supabase.co/functions/v1/reports`
+- Selection: `https://YOUR_PROJECT_REF.supabase.co/functions/v1/selection`
 
 ## 5. Update Frontend
 
@@ -105,3 +113,14 @@ VITE_API_BASE_URL=https://YOUR_PROJECT_REF.supabase.co/functions/v1
 ✅ Automatic API generation
 ✅ Better error handling
 ✅ Free tier yang generous
+
+## Complete API Endpoints:
+- ✅ Authentication (login/logout)
+- ✅ Applicants CRUD (create, read, update, delete)
+- ✅ Statistics (dashboard data)
+- ✅ Attributes management (selection criteria)
+- ✅ Reports (selection results with pagination)
+- ✅ Selection process (C4.5 algorithm simulation)
+- ✅ File upload support
+- ✅ Search and filtering
+- ✅ Pagination for all list endpoints
