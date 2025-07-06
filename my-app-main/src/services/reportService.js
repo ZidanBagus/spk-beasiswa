@@ -9,7 +9,7 @@ const getAllSelectionResults = async (params = {}) => {
   // params bisa berisi: { page, limit, search, status, sortBy, sortOrder, fetchAll }
   try {
     // Pastikan params dikirim dengan benar
-    const response = await apiClient.get(API_PATH, { params });
+    const response = await apiClient.get(`${API_PATH}/results`, { params });
     console.log("REPORT_SERVICE: Data hasil seleksi diterima. Params:", params, "Response:", response.data);
     return response.data; // Backend akan mengembalikan { totalItems, results, totalPages, currentPage, summary }
   } catch (error) {

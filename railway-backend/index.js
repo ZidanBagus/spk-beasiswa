@@ -441,17 +441,103 @@ app.put('/api/attributes', async (req, res) => {
   }
 });
 
-// Reports - EXACT SAME as local
+// Reports - EXACT SAME as local with full filtering
+app.get('/api/reports/results', async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      search = '', 
+      status = 'semua',
+      sortBy = 'tanggalSeleksi',
+      sortOrder = 'DESC',
+      fetchAll = 'false'
+    } = req.query;
+
+    let paginationOptions = {};
+    if (String(fetchAll).toLowerCase() !== 'true') {
+      const parsedLimit = parseInt(limit);
+      const parsedPage = parseInt(page);
+      const offset = (parsedPage - 1) * parsedLimit;
+      paginationOptions.limit = parsedLimit;
+      paginationOptions.offset = offset;
+    }
+
+    let whereClause = {};
+    if (status && status !== 'semua') {
+      whereClause.statusKelulusan = status;
+    }
+
+    if (search) {
+      const searchNum = parseFloat(search);
+      const searchClauses = [
+        { namaPendaftar: { [Sequelize.Op.iLike]: `%${search}%` } },
+        { penghasilanOrtu: { [Sequelize.Op.iLike]: `%${search}%` } }
+      ];
+      if (!isNaN(searchNum)) {
+        searchClauses.push({ ipk: searchNum });
+        const searchInt = parseInt(search);
+        if(!isNaN(searchInt)) searchClauses.push({ jmlTanggungan: searchInt });
+      }
+      if (search.toLowerCase() === 'terima' || search.toLowerCase() === 'tidak') {
+        searchClauses.push({ statusKelulusan: { [Sequelize.Op.iLike]: `%${search}%` } });
+      }
+      if (searchClauses.length > 0) {
+        whereClause[Sequelize.Op.or] = searchClauses;
+      }
+    }
+    
+    const allowedSortByFields = ['id', 'namaPendaftar', 'ipk', 'penghasilanOrtu', 'jmlTanggungan', 'statusKelulusan', 'tanggalSeleksi', 'createdAt', 'updatedAt'];
+    const validSortBy = allowedSortByFields.includes(sortBy) ? sortBy : 'tanggalSeleksi';
+    const validSortOrder = ['ASC', 'DESC'].includes(String(sortOrder).toUpperCase()) ? String(sortOrder).toUpperCase() : 'DESC';
+
+    const queryOptions = {
+      where: whereClause,
+      order: [[validSortBy, validSortOrder]],
+      ...paginationOptions 
+    };
+    
+    const rows = await SelectionResult.findAll(queryOptions);
+    const count = await SelectionResult.count({ where: whereClause });
+
+    const totalTerima = await SelectionResult.count({
+      where: {
+        ...whereClause, 
+        statusKelulusan: 'Terima'
+      }
+    });
+
+    const totalTidak = await SelectionResult.count({
+      where: {
+        ...whereClause, 
+        statusKelulusan: 'Tidak'
+      }
+    });
+    
+    res.json({
+      totalItems: count,
+      results: rows,
+      totalPages: String(fetchAll).toLowerCase() === 'true' ? 1 : Math.ceil(count / parseInt(limit)),
+      currentPage: String(fetchAll).toLowerCase() === 'true' ? 1 : parseInt(page),
+      summary: {
+        total: count,
+        Terima: totalTerima,
+        Tidak: totalTidak
+      }
+    });
+  } catch (error) {
+    console.error('Error mengambil hasil seleksi:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan pada server saat mengambil hasil seleksi.', error: error.message });
+  }
+});
+
+// Legacy reports endpoint for compatibility
 app.get('/api/reports', async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     
     const { count, rows } = await SelectionResult.findAndCountAll({
-      include: [
-        { model: Applicant, as: 'applicant' },
-        { model: SelectionBatch, as: 'batch' }
-      ],
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [['tanggalSeleksi', 'DESC']]
@@ -475,7 +561,25 @@ app.get('/api/reports', async (req, res) => {
   }
 });
 
-// Selection Batch endpoints
+// Selection Batch endpoints - EXACT SAME as local
+app.get('/api/batches', async (req, res) => {
+  try {
+    const batches = await SelectionBatch.findAll({
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'username', 'namaLengkap']
+      }],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(batches);
+  } catch (error) {
+    console.error("Error mengambil data batch:", error);
+    res.status(500).json({ message: 'Gagal memuat riwayat pengujian.', error: error.message });
+  }
+});
+
+// Legacy endpoint for compatibility
 app.get('/api/selection-batches', async (req, res) => {
   try {
     const batches = await SelectionBatch.findAll({
