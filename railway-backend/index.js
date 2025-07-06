@@ -952,8 +952,15 @@ app.post('/api/selection/test', async (req, res) => {
       const lastRule = path.filter(p => p.attribute).pop();
       if (lastRule) {
         const humanAttribute = lastRule.attribute.replace('_kategori', '');
-        let condition = lastRule.threshold != null ? `${humanAttribute} ${plainApplicant[lastRule.attribute] <= lastRule.threshold ? '<=' : '>'} ${lastRule.threshold.toFixed(2)}` : `${humanAttribute} = '${lastRule.value}'`;
-        reason = `${predictedStatus} karena memenuhi kondisi: ${condition}`;
+        let actualValue = plainApplicant[lastRule.attribute] || plainApplicant[humanAttribute];
+        
+        // Generate accurate reason based on actual data
+        if (lastRule.threshold != null) {
+          const operator = actualValue <= lastRule.threshold ? '<=' : '>';
+          reason = `${predictedStatus === 'terima' ? 'Terima' : 'Tidak'} karena ${humanAttribute} ${actualValue} ${operator} ${lastRule.threshold.toFixed(2)}`;
+        } else {
+          reason = `${predictedStatus === 'terima' ? 'Terima' : 'Tidak'} karena ${humanAttribute} = '${actualValue}'`;
+        }
       }
 
       if (matrix[actualStatus] && matrix[actualStatus][predictedStatus] !== undefined) {
@@ -1039,8 +1046,15 @@ app.post('/api/selection/test-all', async (req, res) => {
       const lastRule = path.filter(p => p.attribute).pop();
       if (lastRule) {
         const humanAttribute = lastRule.attribute.replace('_kategori', '');
-        let condition = lastRule.threshold != null ? `${humanAttribute} ${plainApplicant[lastRule.attribute] <= lastRule.threshold ? '<=' : '>'} ${lastRule.threshold.toFixed(2)}` : `${humanAttribute} = '${lastRule.value}'`;
-        reason = `${predictedStatus} karena memenuhi kondisi: ${condition}`;
+        let actualValue = plainApplicant[lastRule.attribute] || plainApplicant[humanAttribute];
+        
+        // Generate accurate reason based on actual data
+        if (lastRule.threshold != null) {
+          const operator = actualValue <= lastRule.threshold ? '<=' : '>';
+          reason = `${predictedStatus === 'terima' ? 'Terima' : 'Tidak'} karena ${humanAttribute} ${actualValue} ${operator} ${lastRule.threshold.toFixed(2)}`;
+        } else {
+          reason = `${predictedStatus === 'terima' ? 'Terima' : 'Tidak'} karena ${humanAttribute} = '${actualValue}'`;
+        }
       }
 
       if (matrix[actualStatus] && matrix[actualStatus][predictedStatus] !== undefined) {
