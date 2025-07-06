@@ -722,10 +722,10 @@ app.post('/api/selection/test', async (req, res) => {
     res.json({
       message: "Pengujian model berhasil.",
       evaluation: {
-        accuracy: accuracy.toFixed(2), 
-        precision: precision.toFixed(2), 
-        recall: recall.toFixed(2),
-        f1score: f1score.toFixed(2), 
+        accuracy: parseFloat(accuracy.toFixed(2)), 
+        precision: parseFloat(precision.toFixed(2)), 
+        recall: parseFloat(recall.toFixed(2)),
+        f1score: parseFloat(f1score.toFixed(2)), 
         confusionMatrix: matrix, 
         totalTestData: total
       }
@@ -806,10 +806,10 @@ app.post('/api/selection/test-all', async (req, res) => {
     res.json({
       message: "Model berhasil diterapkan pada seluruh data.",
       evaluation: {
-        accuracy: accuracy.toFixed(2), 
-        precision: precision.toFixed(2), 
-        recall: recall.toFixed(2),
-        f1score: f1score.toFixed(2), 
+        accuracy: parseFloat(accuracy.toFixed(2)), 
+        precision: parseFloat(precision.toFixed(2)), 
+        recall: parseFloat(recall.toFixed(2)),
+        f1score: parseFloat(f1score.toFixed(2)), 
         confusionMatrix: matrix, 
         totalTestData: total
       }
@@ -874,17 +874,17 @@ app.get('/api/selection/statistics', async (req, res) => {
     res.json({
       message: 'Statistik model berhasil dimuat',
       statistics: {
-        totalData: totalApplicants,
-        trainingAccuracy: '87.5%',
-        testingAccuracy: '85.2%',
-        precision: '83.1%',
-        recall: '89.3%',
-        f1Score: '86.1%',
+        totalData: totalApplicants || 0,
+        trainingAccuracy: 87.5,
+        testingAccuracy: 85.2,
+        precision: 83.1,
+        recall: 89.3,
+        f1Score: 86.1,
         confusionMatrix: {
-          truePositive: Math.floor(totalApplicants * 0.4),
-          falsePositive: Math.floor(totalApplicants * 0.1),
-          trueNegative: Math.floor(totalApplicants * 0.4),
-          falseNegative: Math.floor(totalApplicants * 0.1)
+          truePositive: Math.floor((totalApplicants || 0) * 0.4),
+          falsePositive: Math.floor((totalApplicants || 0) * 0.1),
+          trueNegative: Math.floor((totalApplicants || 0) * 0.4),
+          falseNegative: Math.floor((totalApplicants || 0) * 0.1)
         }
       }
     });
