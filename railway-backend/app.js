@@ -37,10 +37,40 @@ db.sequelize.authenticate()
   .then(() => console.log('Koneksi database berhasil.'))
   .catch(err => console.error('Tidak bisa konek ke database:', err.message));
 
-// 9. Sinkronisasi database (opsional, lebih baik gunakan migrasi untuk production)
-// db.sequelize.sync({ alter: true })
-//  .then(() => console.log('Database tersinkronisasi dengan model.'))
-//  .catch(err => console.error('Gagal sinkronisasi database:', err));
+// 9. Sinkronisasi database untuk Railway
+db.sequelize.sync({ force: false })
+  .then(async () => {
+    console.log('Database tersinkronisasi dengan model.');
+    
+    // Create admin user if not exists
+    const bcrypt = require('bcryptjs');
+    const User = db.User;
+    const existingUser = await User.findOne({ where: { username: 'admin' } });
+    if (!existingUser) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await User.create({
+        username: 'admin',
+        password: hashedPassword,
+        namaLengkap: 'Administrator Sistem'
+      });
+      console.log('Admin user created');
+    }
+    
+    // Create selection attributes if not exists
+    const SelectionAttribute = db.SelectionAttribute;
+    const existingAttributes = await SelectionAttribute.count();
+    if (existingAttributes === 0) {
+      await SelectionAttribute.bulkCreate([
+        { attributeName: 'ipk', displayName: 'IPK', isSelected: true },
+        { attributeName: 'penghasilanOrtu', displayName: 'Penghasilan Orang Tua', isSelected: true },
+        { attributeName: 'jmlTanggungan', displayName: 'Jumlah Tanggungan', isSelected: true },
+        { attributeName: 'ikutOrganisasi', displayName: 'Keikutsertaan Organisasi', isSelected: true },
+        { attributeName: 'ikutUKM', displayName: 'Keikutsertaan UKM', isSelected: true }
+      ]);
+      console.log('Selection attributes created');
+    }
+  })
+  .catch(err => console.error('Gagal sinkronisasi database:', err));
 
 // 10. Rute dasar untuk tes API
 app.get('/', (req, res) => {

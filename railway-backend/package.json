@@ -4,7 +4,7 @@
   "description": "",
   "main": "api/index.js",
   "scripts": {
-    "start": "npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all && node server.js",
+    "start": "node server.js",
     "dev": "node server-local.js",
     "local": "node server-local.js",
     "build": "npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all",
