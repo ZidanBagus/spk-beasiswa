@@ -7,7 +7,7 @@ const SelectionAttribute = db.SelectionAttribute;
 exports.getAllAttributes = async (req, res) => {
   try {
     const attributes = await SelectionAttribute.findAll({ order: [['id', 'ASC']] });
-    res.status(200).json(attributes);
+    res.status(200).json({ attributes });
   } catch (error) {
     console.error("Error di getAllAttributes:", error);
     res.status(500).json({ message: 'Gagal mengambil data atribut.', error: error.message });
