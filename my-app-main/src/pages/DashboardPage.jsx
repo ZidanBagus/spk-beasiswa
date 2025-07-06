@@ -12,13 +12,13 @@ import {
     CategoryScale, LinearScale, BarElement, PointElement, LineElement
 } from 'chart.js';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+// import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { chartConfig } from '../components/dashboard/chartConfig';
 
 // Register Chart.js components
 ChartJS.register(
     ArcElement, Tooltip, Legend, Title, CategoryScale, LinearScale,
-    BarElement, PointElement, LineElement, ChartDataLabels
+    BarElement, PointElement, LineElement
 );
 
 
