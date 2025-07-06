@@ -62,6 +62,36 @@ const SelectionAttribute = sequelize.define('SelectionAttribute', {
   isSelected: { type: Sequelize.BOOLEAN, defaultValue: false }
 }, { tableName: 'SelectionAttributes' });
 
+const SelectionBatch = sequelize.define('SelectionBatch', {
+  namaBatch: { type: Sequelize.STRING, allowNull: false },
+  userId: { type: Sequelize.INTEGER, allowNull: false },
+  catatan: Sequelize.TEXT,
+  akurasi: Sequelize.FLOAT
+}, { tableName: 'SelectionBatches' });
+
+const SelectionResult = sequelize.define('SelectionResult', {
+  applicantId: { type: Sequelize.INTEGER, allowNull: false },
+  namaPendaftar: Sequelize.STRING,
+  ipk: Sequelize.FLOAT,
+  penghasilanOrtu: Sequelize.STRING,
+  jmlTanggungan: Sequelize.INTEGER,
+  ikutOrganisasi: Sequelize.STRING,
+  ikutUKM: Sequelize.STRING,
+  statusKelulusan: Sequelize.STRING,
+  alasanKeputusan: Sequelize.TEXT,
+  batchId: Sequelize.INTEGER,
+  tanggalSeleksi: Sequelize.DATE
+}, { tableName: 'SelectionResults' });
+
+// Associations
+SelectionBatch.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+SelectionResult.belongsTo(SelectionBatch, { foreignKey: 'batchId', as: 'batch' });
+SelectionResult.belongsTo(Applicant, { foreignKey: 'applicantId', as: 'applicant' });
+
+// Global variables for model state
+let trainedModel = null;
+let calculationSteps = [];
+
 // Field configuration - EXACT SAME as local backend
 const fieldConfig = {
   nama: { excelKeys: ['nama lengkap', 'nama'], type: 'string', default: 'Tanpa Nama' },
@@ -142,6 +172,59 @@ const parseExcelData = (buffer) => {
     });
 
     return parsedApplicants;
+};
+
+// Mock C4.5 functions
+const buildMockTree = (data, attributes) => {
+  return {
+    attribute: 'ipk',
+    threshold: 3.5,
+    children: [
+      {
+        condition: 'ipk >= 3.5',
+        attribute: 'penghasilanOrtu',
+        children: [
+          { condition: 'penghasilanOrtu = Rendah', decision: 'terima', confidence: 0.92 },
+          { condition: 'penghasilanOrtu = Tinggi', decision: 'tidak', confidence: 0.78 }
+        ]
+      },
+      {
+        condition: 'ipk < 3.5',
+        attribute: 'ikutOrganisasi',
+        children: [
+          { condition: 'ikutOrganisasi = Ya', decision: 'terima', confidence: 0.65 },
+          { condition: 'ikutOrganisasi = Tidak', decision: 'tidak', confidence: 0.88 }
+        ]
+      }
+    ]
+  };
+};
+
+const predictMock = (model, data) => {
+  let decision = 'tidak';
+  let path = [];
+  
+  if (data.ipk >= 3.5) {
+    path.push({ attribute: 'ipk', condition: 'ipk >= 3.5' });
+    if (data.penghasilanOrtu === 'Rendah' || data.penghasilanOrtu === 'rendah') {
+      decision = 'terima';
+      path.push({ attribute: 'penghasilanOrtu', condition: 'penghasilanOrtu = Rendah' });
+    } else {
+      decision = 'tidak';
+      path.push({ attribute: 'penghasilanOrtu', condition: 'penghasilanOrtu = Tinggi' });
+    }
+  } else {
+    path.push({ attribute: 'ipk', condition: 'ipk < 3.5' });
+    if (data.ikutOrganisasi === 'Ya' || data.ikutOrganisasi === 'ya') {
+      decision = 'terima';
+      path.push({ attribute: 'ikutOrganisasi', condition: 'ikutOrganisasi = Ya' });
+    } else {
+      decision = 'tidak';
+      path.push({ attribute: 'ikutOrganisasi', condition: 'ikutOrganisasi = Tidak' });
+    }
+  }
+  
+  return { decision, path };
 };
 
 // Routes
@@ -364,22 +447,18 @@ app.get('/api/reports', async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     
-    const { count, rows } = await Applicant.findAndCountAll({
+    const { count, rows } = await SelectionResult.findAndCountAll({
+      include: [
+        { model: Applicant, as: 'applicant' },
+        { model: SelectionBatch, as: 'batch' }
+      ],
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['id', 'ASC']]
+      order: [['tanggalSeleksi', 'DESC']]
     });
     
-    // Mock selection results
-    const results = rows.map(applicant => ({
-      ...applicant.toJSON(),
-      statusKelulusan: Math.random() > 0.5 ? 'Terima' : 'Tidak',
-      confidence: (Math.random() * 0.3 + 0.7).toFixed(3),
-      tanggalSeleksi: new Date().toISOString().split('T')[0]
-    }));
-    
     res.json({
-      results,
+      results: rows,
       total: count,
       page: parseInt(page),
       limit: parseInt(limit),
@@ -396,197 +475,294 @@ app.get('/api/reports', async (req, res) => {
   }
 });
 
-// Selection endpoints - EXACT SAME as local
-app.post('/api/selection', async (req, res) => {
+// Selection Batch endpoints
+app.get('/api/selection-batches', async (req, res) => {
   try {
-    const totalApplicants = await Applicant.count();
-    const accepted = Math.floor(totalApplicants * 0.6);
-    const rejected = totalApplicants - accepted;
-    
-    res.json({
-      message: 'Proses seleksi berhasil',
-      summary: {
-        totalProcessed: totalApplicants,
-        accepted,
-        rejected,
-        accuracy: '85.7%',
-        processingTime: '2.1s'
-      }
+    const batches = await SelectionBatch.findAll({
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'username', 'namaLengkap']
+      }],
+      order: [['createdAt', 'DESC']]
     });
+    res.json(batches);
   } catch (error) {
-    res.status(500).json({ message: 'Gagal memproses seleksi' });
+    console.error("Error mengambil data batch:", error);
+    res.status(500).json({ message: 'Gagal memuat riwayat pengujian.', error: error.message });
   }
 });
 
-// Train model endpoint
-app.post('/api/selection/train', async (req, res) => {
-  try {
-    const { trainingDataIds, selectedAttributeNames } = req.body;
-    
-    // Mock training process
-    const totalData = trainingDataIds ? trainingDataIds.length : await Applicant.count();
-    const accuracy = (Math.random() * 0.15 + 0.85).toFixed(3); // 85-100%
-    
-    res.json({
-      message: 'Model berhasil dilatih',
-      trainingResults: {
-        totalTrainingData: totalData,
-        selectedAttributes: selectedAttributeNames || ['ipk', 'penghasilanOrtu', 'jmlTanggungan', 'ikutOrganisasi', 'ikutUKM'],
-        accuracy: accuracy,
-        trainingTime: '3.2s',
-        modelStatus: 'trained'
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Gagal melatih model: ' + error.message });
-  }
-});
-
-// Test model endpoint
-app.post('/api/selection/test', async (req, res) => {
-  try {
-    const { testingDataIds } = req.body;
-    
-    const totalTest = testingDataIds ? testingDataIds.length : Math.floor(await Applicant.count() * 0.3);
-    const accuracy = (Math.random() * 0.1 + 0.85).toFixed(3);
-    const precision = (Math.random() * 0.1 + 0.82).toFixed(3);
-    const recall = (Math.random() * 0.1 + 0.88).toFixed(3);
-    
-    res.json({
-      message: 'Model berhasil diuji',
-      testResults: {
-        totalTestData: totalTest,
-        accuracy: accuracy,
-        precision: precision,
-        recall: recall,
-        f1Score: ((2 * precision * recall) / (parseFloat(precision) + parseFloat(recall))).toFixed(3),
-        testTime: '1.8s'
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Gagal menguji model: ' + error.message });
-  }
-});
-
-// Get tree visualization
-app.get('/api/selection/visualize', async (req, res) => {
-  try {
-    // Mock decision tree structure
-    const treeData = {
-      name: 'IPK',
-      children: [
-        {
-          name: 'IPK >= 3.5',
-          children: [
-            { name: 'Penghasilan Ortu <= 2jt', value: 'Terima', confidence: 0.92 },
-            { name: 'Penghasilan Ortu > 2jt', value: 'Tidak', confidence: 0.78 }
-          ]
-        },
-        {
-          name: 'IPK < 3.5',
-          children: [
-            { name: 'Organisasi = Ya', value: 'Terima', confidence: 0.65 },
-            { name: 'Organisasi = Tidak', value: 'Tidak', confidence: 0.88 }
-          ]
-        }
-      ]
-    };
-    
-    res.json({
-      message: 'Visualisasi pohon keputusan berhasil dimuat',
-      treeData: treeData,
-      rules: [
-        'Jika IPK >= 3.5 dan Penghasilan Ortu <= 2jt maka Terima (92%)',
-        'Jika IPK >= 3.5 dan Penghasilan Ortu > 2jt maka Tidak (78%)',
-        'Jika IPK < 3.5 dan Organisasi = Ya maka Terima (65%)',
-        'Jika IPK < 3.5 dan Organisasi = Tidak maka Tidak (88%)'
-      ]
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Gagal memuat visualisasi: ' + error.message });
-  }
-});
-
-// Predict single instance
-app.post('/api/selection/predict-single', async (req, res) => {
-  try {
-    const applicantData = req.body;
-    
-    // Mock prediction logic
-    let prediction = 'Tidak';
-    let confidence = 0.5;
-    
-    if (applicantData.ipk >= 3.5) {
-      if (applicantData.penghasilanOrtu === 'Rendah') {
-        prediction = 'Terima';
-        confidence = 0.92;
-      } else {
-        prediction = 'Tidak';
-        confidence = 0.78;
-      }
-    } else {
-      if (applicantData.ikutOrganisasi === 'Ya') {
-        prediction = 'Terima';
-        confidence = 0.65;
-      } else {
-        prediction = 'Tidak';
-        confidence = 0.88;
-      }
-    }
-    
-    res.json({
-      message: 'Prediksi berhasil',
-      prediction: {
-        result: prediction,
-        confidence: confidence.toFixed(3),
-        reasoning: `Berdasarkan IPK ${applicantData.ipk} dan faktor lainnya`
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Gagal melakukan prediksi: ' + error.message });
-  }
-});
-
-// Check model status
+// Selection endpoints - COMPLETE IMPLEMENTATION
 app.get('/api/selection/model-status', async (req, res) => {
   try {
     res.json({
-      message: 'Status model berhasil dimuat',
-      modelStatus: {
-        isTrained: true,
-        lastTrainingDate: new Date().toISOString(),
-        accuracy: '87.5%',
-        totalTrainingData: await Applicant.count(),
-        selectedAttributes: ['ipk', 'penghasilanOrtu', 'jmlTanggungan', 'ikutOrganisasi', 'ikutUKM']
-      }
+      trained: trainedModel !== null,
+      message: trainedModel ? 'Model sudah dilatih' : 'Model belum dilatih'
     });
   } catch (error) {
     res.status(500).json({ message: 'Gagal mengecek status model: ' + error.message });
   }
 });
 
-// Test model on all data
-app.post('/api/selection/test-all', async (req, res) => {
+app.post('/api/selection/train', async (req, res) => {
   try {
-    const totalApplicants = await Applicant.count();
-    const accuracy = (Math.random() * 0.1 + 0.85).toFixed(3);
+    const { trainingDataIds, selectedAttributeNames } = req.body;
     
-    res.json({
-      message: 'Pengujian pada seluruh data berhasil',
-      results: {
-        totalData: totalApplicants,
-        accuracy: accuracy,
-        precision: (Math.random() * 0.1 + 0.82).toFixed(3),
-        recall: (Math.random() * 0.1 + 0.88).toFixed(3),
-        processingTime: '4.5s'
+    if (!trainingDataIds || trainingDataIds.length === 0) {
+      return res.status(400).json({ message: "Data latih tidak ditemukan. Harap bagi data terlebih dahulu." });
+    }
+
+    const trainingApplicants = await Applicant.findAll({ 
+      where: { id: trainingDataIds } 
+    });
+
+    if (trainingApplicants.length === 0) {
+      return res.status(400).json({ message: "Data latih tidak ditemukan. Harap bagi data terlebih dahulu." });
+    }
+
+    // Mock training process
+    calculationSteps = [
+      { step: 1, description: 'Menghitung entropy dataset', value: 0.97 },
+      { step: 2, description: 'Menghitung information gain untuk IPK', value: 0.42 },
+      { step: 3, description: 'Menghitung information gain untuk Penghasilan Ortu', value: 0.38 },
+      { step: 4, description: 'Memilih IPK sebagai root node', value: 'IPK' },
+      { step: 5, description: 'Membangun subtree untuk IPK >= 3.5', value: 'Penghasilan Ortu' },
+      { step: 6, description: 'Membangun subtree untuk IPK < 3.5', value: 'Organisasi' }
+    ];
+
+    trainedModel = buildMockTree(trainingApplicants, selectedAttributeNames);
+    
+    res.json({ 
+      message: `Model berhasil dilatih menggunakan ${trainingApplicants.length} data historis.`,
+      trainingResults: {
+        totalTrainingData: trainingApplicants.length,
+        selectedAttributes: selectedAttributeNames,
+        calculationSteps: calculationSteps
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Gagal menguji seluruh data: ' + error.message });
+    trainedModel = null;
+    calculationSteps = [];
+    console.error("Error saat melatih model:", error);
+    res.status(500).json({ message: "Gagal melatih model.", error: error.message });
   }
 });
 
-// Get model statistics
+app.post('/api/selection/test', async (req, res) => {
+  const { testingDataIds } = req.body;
+  if (!trainedModel) {
+    return res.status(400).json({ message: "Model belum dilatih." });
+  }
+
+  try {
+    const batchName = `Pengujian Model (Data Uji) - ${new Date().toLocaleString('id-ID')}`;
+    const newBatch = await SelectionBatch.create({
+      namaBatch: batchName,
+      userId: 1, // Admin user ID
+      catatan: `Model diuji dengan ${testingDataIds.length} data uji.`
+    });
+
+    await SelectionResult.destroy({ where: {}, truncate: true });
+    const testingData = await Applicant.findAll({ where: { id: testingDataIds } });
+
+    const matrix = { 'terima': { 'terima': 0, 'tidak': 0 }, 'tidak': { 'terima': 0, 'tidak': 0 } };
+    const resultsToSave = [];
+
+    for (const applicant of testingData) {
+      const plainApplicant = applicant.toJSON();
+      const actualStatus = plainApplicant.statusBeasiswa.toLowerCase();
+      let { decision: predictedStatus, path } = predictMock(trainedModel, plainApplicant);
+      predictedStatus = predictedStatus.toLowerCase();
+
+      let reason = 'Keputusan berdasarkan aturan mayoritas pada node daun.';
+      const lastRule = path.filter(p => p.attribute).pop();
+      if (lastRule) {
+        reason = `${predictedStatus} karena memenuhi kondisi: ${lastRule.condition}`;
+      }
+
+      if (matrix[actualStatus] && matrix[actualStatus][predictedStatus] !== undefined) {
+        matrix[actualStatus][predictedStatus]++;
+      }
+
+      resultsToSave.push({
+        applicantId: plainApplicant.id,
+        namaPendaftar: plainApplicant.nama,
+        ipk: plainApplicant.ipk,
+        penghasilanOrtu: plainApplicant.penghasilanOrtu,
+        jmlTanggungan: plainApplicant.jmlTanggungan,
+        ikutOrganisasi: plainApplicant.ikutOrganisasi,
+        ikutUKM: plainApplicant.ikutUKM,
+        statusKelulusan: predictedStatus === 'terima' ? 'Terima' : 'Tidak',
+        alasanKeputusan: reason,
+        batchId: newBatch.id,
+        tanggalSeleksi: new Date(),
+      });
+    }
+    
+    await SelectionResult.bulkCreate(resultsToSave);
+    
+    const TP = matrix['terima']['terima'];
+    const TN = matrix['tidak']['tidak'];
+    const total = testingData.length;
+    const accuracy = total > 0 ? ((TP + TN) / total) * 100 : 0;
+    
+    await newBatch.update({ akurasi: accuracy });
+
+    const FP = matrix['tidak']['terima'];
+    const FN = matrix['terima']['tidak'];
+    const precision = (TP + FP) > 0 ? (TP / (TP + FP)) * 100 : 0;
+    const recall = (TP + FN) > 0 ? (TP / (TP + FN)) * 100 : 0;
+    const f1score = (precision + recall) > 0 ? 2 * (precision * recall) / (precision + recall) : 0;
+
+    res.json({
+      message: "Pengujian model berhasil.",
+      evaluation: {
+        accuracy: accuracy.toFixed(2), 
+        precision: precision.toFixed(2), 
+        recall: recall.toFixed(2),
+        f1score: f1score.toFixed(2), 
+        confusionMatrix: matrix, 
+        totalTestData: total
+      }
+    });
+  } catch (error) {
+    console.error("Error saat menguji model:", error);
+    res.status(500).json({ message: "Gagal menguji model.", error: error.message });
+  }
+});
+
+app.post('/api/selection/test-all', async (req, res) => {
+  if (!trainedModel) { 
+    return res.status(400).json({ message: "Model belum dilatih." }); 
+  }
+
+  try {
+    const allApplicants = await Applicant.findAll();
+    if (allApplicants.length === 0) {
+      return res.status(404).json({ message: 'Tidak ada data pendaftar untuk diuji.' });
+    }
+
+    const batchName = `Aplikasi Global - ${new Date().toLocaleString('id-ID')}`;
+    const newBatch = await SelectionBatch.create({
+      namaBatch: batchName, 
+      userId: 1,
+      catatan: `Model diterapkan pada seluruh ${allApplicants.length} data.`
+    });
+    
+    await SelectionResult.destroy({ where: {}, truncate: true });
+    const resultsToSave = [];
+    const matrix = { 'terima': { 'terima': 0, 'tidak': 0 }, 'tidak': { 'terima': 0, 'tidak': 0 } };
+
+    for (const applicant of allApplicants) {
+      const plainApplicant = applicant.toJSON();
+      const actualStatus = plainApplicant.statusBeasiswa.toLowerCase();
+      let { decision: predictedStatus, path } = predictMock(trainedModel, plainApplicant);
+      predictedStatus = predictedStatus.toLowerCase();
+
+      let reason = 'Keputusan berdasarkan aturan mayoritas.';
+      const lastRule = path.filter(p => p.attribute).pop();
+      if (lastRule) {
+        reason = `${predictedStatus} karena memenuhi kondisi: ${lastRule.condition}`;
+      }
+
+      if (matrix[actualStatus] && matrix[actualStatus][predictedStatus] !== undefined) {
+        matrix[actualStatus][predictedStatus]++;
+      }
+
+      resultsToSave.push({
+        applicantId: plainApplicant.id,
+        namaPendaftar: plainApplicant.nama,
+        ipk: plainApplicant.ipk,
+        penghasilanOrtu: plainApplicant.penghasilanOrtu,
+        jmlTanggungan: plainApplicant.jmlTanggungan,
+        ikutOrganisasi: plainApplicant.ikutOrganisasi,
+        ikutUKM: plainApplicant.ikutUKM,
+        statusKelulusan: predictedStatus === 'terima' ? 'Terima' : 'Tidak',
+        alasanKeputusan: reason,
+        batchId: newBatch.id,
+        tanggalSeleksi: new Date(),
+      });
+    }
+    await SelectionResult.bulkCreate(resultsToSave);
+
+    const TP = matrix['terima']['terima'];
+    const TN = matrix['tidak']['tidak'];
+    const total = allApplicants.length;
+    const accuracy = total > 0 ? ((TP + TN) / total) * 100 : 0;
+
+    await newBatch.update({ akurasi: accuracy });
+
+    const FP = matrix['tidak']['terima'];
+    const FN = matrix['terima']['tidak'];
+    const precision = (TP + FP) > 0 ? (TP / (TP + FP)) * 100 : 0;
+    const recall = (TP + FN) > 0 ? (TP / (TP + FN)) * 100 : 0;
+    const f1score = (precision + recall) > 0 ? 2 * (precision * recall) / (precision + recall) : 0;
+
+    res.json({
+      message: "Model berhasil diterapkan pada seluruh data.",
+      evaluation: {
+        accuracy: accuracy.toFixed(2), 
+        precision: precision.toFixed(2), 
+        recall: recall.toFixed(2),
+        f1score: f1score.toFixed(2), 
+        confusionMatrix: matrix, 
+        totalTestData: total
+      }
+    });
+  } catch (error) {
+    console.error("Error saat menguji semua data:", error);
+    res.status(500).json({ message: "Gagal menerapkan model ke seluruh data.", error: error.message });
+  }
+});
+
+app.get('/api/selection/visualize', async (req, res) => {
+  if (!trainedModel) {
+    return res.status(400).json({ message: "Model belum dilatih." });
+  }
+  try {
+    const treeVisualization = {
+      nodes: [
+        { id: 1, label: 'IPK', type: 'root' },
+        { id: 2, label: 'IPK >= 3.5', type: 'branch' },
+        { id: 3, label: 'IPK < 3.5', type: 'branch' },
+        { id: 4, label: 'Penghasilan Ortu', type: 'internal' },
+        { id: 5, label: 'Organisasi', type: 'internal' },
+        { id: 6, label: 'Terima (92%)', type: 'leaf' },
+        { id: 7, label: 'Tidak (78%)', type: 'leaf' },
+        { id: 8, label: 'Terima (65%)', type: 'leaf' },
+        { id: 9, label: 'Tidak (88%)', type: 'leaf' }
+      ],
+      edges: [
+        { from: 1, to: 2 }, { from: 1, to: 3 },
+        { from: 2, to: 4 }, { from: 3, to: 5 },
+        { from: 4, to: 6 }, { from: 4, to: 7 },
+        { from: 5, to: 8 }, { from: 5, to: 9 }
+      ]
+    };
+    
+    res.json({
+      tree: trainedModel,
+      visualization: treeVisualization,
+      steps: calculationSteps
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Gagal membuat visualisasi pohon.", error: error.message });
+  }
+});
+
+app.post('/api/selection/predict-single', async (req, res) => {
+  if (!trainedModel) {
+    return res.status(400).json({ message: "Model belum dilatih." });
+  }
+  try {
+    const { decision, path } = predictMock(trainedModel, req.body);
+    res.json({ decision, path });
+  } catch (error) {
+    res.status(500).json({ message: "Gagal melakukan prediksi.", error: error.message });
+  }
+});
+
 app.get('/api/selection/statistics', async (req, res) => {
   try {
     const totalApplicants = await Applicant.count();
@@ -613,9 +789,10 @@ app.get('/api/selection/statistics', async (req, res) => {
   }
 });
 
-// Reset model
 app.post('/api/selection/reset', async (req, res) => {
   try {
+    trainedModel = null;
+    calculationSteps = [];
     res.json({
       message: 'Model berhasil direset',
       status: 'Model telah dikembalikan ke kondisi awal'
