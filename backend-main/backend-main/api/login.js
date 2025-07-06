@@ -1,9 +1,31 @@
-// api/login.js - Vercel Function for login
+// File: backend-main/api/login.js
+
 import { Sequelize } from 'sequelize';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import Cors from 'cors';
 
-// 1. Konfigurasi Koneksi Database (langsung di sini)
+// Inisialisasi middleware CORS
+// Ganti '*' dengan URL Vercel frontend Anda untuk keamanan yang lebih baik
+// Contoh: 'https://nama-proyek-frontend-anda.vercel.app'
+const cors = Cors({
+  methods: ['POST', 'GET', 'HEAD', 'OPTIONS'],
+  origin: process.env.FRONTEND_URL || '*', 
+});
+
+// Helper untuk menjalankan middleware di lingkungan serverless
+function runMiddleware(req, res, fn) {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) {
+        return reject(result);
+      }
+      return resolve(result);
+    });
+  });
+}
+
+// Konfigurasi Database dan Model (tetap sama)
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
   dialectOptions: {
@@ -15,67 +37,56 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
   logging: false
 });
 
-// 2. Definisi Model User (harus sama dengan di models/user.js)
 const User = sequelize.define('User', {
   username: { type: Sequelize.STRING, allowNull: false, unique: true },
   password: { type: Sequelize.STRING, allowNull: false },
   namaLengkap: { type: Sequelize.STRING, allowNull: true }
 }, {
-  tableName: 'Users', // Pastikan nama tabel benar
-  timestamps: false // Sesuaikan jika tabel Anda punya createdAt/updatedAt
+  tableName: 'Users',
+  timestamps: false
 });
 
-// Tambahkan method validasi password ke prototype
 User.prototype.validatePassword = async function(password) {
   return await bcrypt.compare(password, this.password);
 };
 
-// 3. Handler Utama
+// Handler utama
 export default async function handler(req, res) {
-  // Atur header CORS
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Sebaiknya diganti dengan URL frontend Vercel Anda
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
+  console.log(`[LOG] /api/login function invoked with method: ${req.method}`);
   
   try {
-    // Tes koneksi database
-    await sequelize.authenticate();
+    // Jalankan middleware CORS
+    await runMiddleware(req, res, cors);
     
-    const { username, password } = req.body;
-    const user = await User.findOne({ where: { username: username } });
+    console.log('[LOG] CORS middleware passed.');
 
-    if (!user || !(await user.validatePassword(password))) {
-      return res.status(401).json({ message: 'Username atau password salah.' });
+    // Logika login Anda dimulai di sini
+    if (req.method === 'POST') {
+      await sequelize.authenticate();
+      console.log('[LOG] Database connection successful.');
+
+      const { username, password } = req.body;
+      if (!username || !password) {
+        return res.status(400).json({ message: 'Username dan password diperlukan.' });
+      }
+
+      const user = await User.findOne({ where: { username: username } });
+
+      if (!user || !(await user.validatePassword(password))) {
+        return res.status(401).json({ message: 'Login gagal. Periksa username dan password Anda.' });
+      }
+
+      const payload = { id: user.id, username: user.username, namaLengkap: user.namaLengkap };
+      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
+
+      return res.status(200).json({ message: 'Login berhasil!', user: payload, token });
+    } else {
+      // Untuk metode selain POST (misalnya GET atau preflight OPTIONS), cukup kembalikan status OK
+      res.status(200).json({ message: 'OK' });
     }
-
-    const payload = {
-      id: user.id,
-      username: user.username,
-      namaLengkap: user.namaLengkap,
-    };
-
-    if (!process.env.JWT_SECRET) {
-      throw new Error('JWT_SECRET tidak terdefinisi di environment variables');
-    }
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
-
-    return res.status(200).json({
-      message: 'Login berhasil!',
-      user: payload,
-      token: token
-    });
 
   } catch (error) {
-    console.error('LOGIN GAGAL - DETAIL ERROR:', error);
-    return res.status(500).json({ message: 'Terjadi kesalahan pada server: ' + error.message });
+    console.error('[FATAL] Error in /api/login handler:', error);
+    res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 }
