@@ -5,7 +5,7 @@ import axios from 'axios';
 const getApiBaseUrl = () => {
   // For production build
   if (import.meta.env.PROD) {
-    return import.meta.env.VITE_API_BASE_URL || 'https://your-project.supabase.co/functions/v1';
+    return `https://${import.meta.env.VITE_API_BASE_URL}/api` || 'https://spk-beasiswa-production.up.railway.app/api';
   }
   // For development - check if running on localhost
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
