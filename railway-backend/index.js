@@ -119,21 +119,11 @@ app.get('/api/applicants', async (req, res) => {
     const { page = 1, limit = 10, search = '' } = req.query;
     const offset = (page - 1) * limit;
     
-    let where = {};
-    if (search) {
-      where = {
-        [Sequelize.Op.or]: [
-          { nama: { [Sequelize.Op.iLike]: `%${search}%` } },
-          { nim: { [Sequelize.Op.iLike]: `%${search}%` } }
-        ]
-      };
-    }
-    
+    // Simple query without complex where clause
     const { count, rows } = await Applicant.findAndCountAll({
-      where,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['createdAt', 'DESC']]
+      order: [['id', 'DESC']]
     });
     
     res.json({
@@ -143,7 +133,8 @@ app.get('/api/applicants', async (req, res) => {
       totalPages: Math.ceil(count / limit)
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Applicants error:', error);
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
 });
 
