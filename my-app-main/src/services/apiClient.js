@@ -7,7 +7,10 @@ const getApiBaseUrl = () => {
   if (import.meta.env.PROD) {
     return import.meta.env.VITE_API_BASE_URL || 'https://backend-main-fu95rqmlg-zidan-bagus-setiawans-projects.vercel.app/api';
   }
-  // For development
+  // For development - check if running on localhost
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5001/api';
+  }
   return import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
 };
 
