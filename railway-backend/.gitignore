@@ -1,4 +1,15 @@
+# Folder dependensi
 node_modules/
+
+# File Environment - SANGAT PENTING UNTUK KEAMANAN!
 .env
+
+# Log-log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# File sistem operasi
 .DS_Store
-*.log
+Thumbs.db
+.vercel
