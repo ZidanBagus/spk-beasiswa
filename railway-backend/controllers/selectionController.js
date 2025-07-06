@@ -89,8 +89,8 @@ exports.testModel = async (req, res) => {
                 ipk: plainApplicant.ipk,
                 penghasilanOrtu: plainApplicant.penghasilanOrtu,
                 jmlTanggungan: plainApplicant.jmlTanggungan,
-                ikutOrganisasi: plainApplicant.ikutOrganisasi ? 'Ya' : 'Tidak',
-                ikutUKM: plainApplicant.ikutUKM ? 'Ya' : 'Tidak',
+                ikutOrganisasi: plainApplicant.ikutOrganisasi,
+                ikutUKM: plainApplicant.ikutUKM,
                 statusKelulusan: predictedStatus === 'terima' ? 'Terima' : 'Tidak', // mapping ke format database
                 alasanKeputusan: reason,
                 batchId: newBatch.id,
@@ -176,9 +176,9 @@ exports.testModelOnAllData = async (req, res) => {
                 ipk: plainApplicant.ipk,
                 penghasilanOrtu: plainApplicant.penghasilanOrtu,
                 jmlTanggungan: plainApplicant.jmlTanggungan,
-                ikutOrganisasi: plainApplicant.ikutOrganisasi ? 'Ya' : 'Tidak',
-                ikutUKM: plainApplicant.ikutUKM ? 'Ya' : 'Tidak',
-                statusKelulusan: predictedStatus === 'terima' ? 'Terima' : 'Tidak', // mapping ke format database
+                ikutOrganisasi: plainApplicant.ikutOrganisasi,
+                ikutUKM: plainApplicant.ikutUKM,
+                statusKelulusan: predictedStatus === 'terima' ? 'Terima' : 'Tidak',
                 alasanKeputusan: reason,
                 batchId: newBatch.id,
                 tanggalSeleksi: new Date(),
