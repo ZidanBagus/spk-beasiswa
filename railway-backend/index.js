@@ -3,6 +3,8 @@ const cors = require('cors');
 const { Sequelize } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const XLSX = require('xlsx');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -14,6 +16,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Multer for file upload
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Database connection
 const sequelize = new Sequelize(process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_Hsczr6wXb1qC@ep-lively-lab-a1r820jx-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require', {
@@ -151,6 +156,45 @@ app.post('/api/applicants', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Upload Excel file
+app.post('/api/applicants/upload', upload.single('excelFile'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(worksheet);
+
+    let importedCount = 0;
+    for (const row of data) {
+      try {
+        await Applicant.create({
+          nama: row.nama || row.Nama,
+          nim: row.nim || row.NIM,
+          ipk: parseFloat(row.ipk || row.IPK),
+          penghasilanOrtu: parseInt(row.penghasilanOrtu || row['Penghasilan Ortu']),
+          jmlTanggungan: parseInt(row.jmlTanggungan || row['Jumlah Tanggungan']),
+          ikutOrganisasi: row.ikutOrganisasi || row['Ikut Organisasi'],
+          ikutUKM: row.ikutUKM || row['Ikut UKM']
+        });
+        importedCount++;
+      } catch (err) {
+        console.log('Skip duplicate:', row.nim);
+      }
+    }
+
+    res.json({
+      message: `Successfully imported ${importedCount} applicants`,
+      importedCount
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Upload failed: ' + error.message });
   }
 });
 
