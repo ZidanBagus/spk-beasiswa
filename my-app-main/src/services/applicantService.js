@@ -87,7 +87,7 @@ const getApplicantStats = async () => {
   try {
     console.log("APPLICANT_SERVICE: getApplicantStats dipanggil");
     // Memanggil endpoint baru '/stats/summary' yang relatif terhadap API_PATH
-    const response = await apiClient.get('/stats'); 
+    const response = await apiClient.get('/applicants/stats'); 
     return response.data; // { totalApplicants, applicantsToday, applicantsLast7Days }
   } catch (error) {
     console.error("APPLICANT_SERVICE: Error fetching applicant stats:", error.response?.data || error.message);

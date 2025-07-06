@@ -6,8 +6,8 @@ const API_URL_AUTH = '/auth/';
 const authService = {
   async login(username, password) {
     try {
-      // For Supabase Edge Functions, the endpoint is just /auth
-      const response = await apiClient.post('/auth', {
+      // For Railway backend, the endpoint is /auth/login
+      const response = await apiClient.post('/auth/login', {
         username,
         password,
       });
