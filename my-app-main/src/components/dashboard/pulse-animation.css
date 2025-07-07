@@ -1,0 +1,108 @@
+/* Enhanced pulse animations for buttons and progress */
+
+@keyframes buttonPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+  }
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(25, 135, 84, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(25, 135, 84, 0);
+  }
+}
+
+@keyframes processingGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(13, 110, 253, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(13, 110, 253, 0.8);
+  }
+}
+
+/* Button animations */
+.btn-animated {
+  transition: all 0.3s ease;
+}
+
+.btn-animated:hover {
+  transform: translateY(-2px);
+}
+
+.btn-animated.processing {
+  animation: processingGlow 2s infinite;
+}
+
+.btn-animated.success {
+  animation: successPulse 1s ease-out;
+}
+
+/* Progress modal animations */
+.progress-modal-enter {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.progress-modal-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 0.3s ease;
+}
+
+/* Stepper animations */
+.stepper-step {
+  transition: all 0.5s ease;
+}
+
+.stepper-step.active {
+  animation: buttonPulse 2s infinite;
+}
+
+/* Accordion animations */
+.accordion-item {
+  transition: all 0.3s ease;
+}
+
+.accordion-item:hover {
+  transform: translateX(5px);
+}
+
+/* Tree visualization entrance */
+.tree-container {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+/* Results table animation */
+.results-table {
+  animation: fadeInRight 0.6s ease-out;
+}
+
+.results-table tr {
+  animation: fadeInUp 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+.results-table tr:nth-child(1) { animation-delay: 0.1s; }
+.results-table tr:nth-child(2) { animation-delay: 0.2s; }
+.results-table tr:nth-child(3) { animation-delay: 0.3s; }
+.results-table tr:nth-child(4) { animation-delay: 0.4s; }
+.results-table tr:nth-child(5) { animation-delay: 0.5s; }
