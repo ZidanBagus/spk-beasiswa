@@ -490,10 +490,10 @@ const AnalyticsDashboardPage = () => {
                     <StatisticsPanel
                         title="Statistik Lanjutan"
                         stats={[
-                            { label: 'IPK Rata-rata Diterima', value: '3.65', trend: 'up' },
-                            { label: 'Penghasilan Dominan', value: 'Rendah', trend: 'stable' },
-                            { label: 'Organisasi Aktif', value: '68%', trend: 'up' },
-                            { label: 'UKM Aktif', value: '45%', trend: 'down' }
+                            { label: 'IPK Rata-rata Diterima', value: stats.advancedStats?.avgIPKAccepted || '0.00', trend: 'up' },
+                            { label: 'Penghasilan Dominan', value: stats.advancedStats?.dominantIncome || 'Tidak Diketahui', trend: 'stable' },
+                            { label: 'Organisasi Aktif', value: `${stats.advancedStats?.orgActivePercentage || 0}%`, trend: 'up' },
+                            { label: 'UKM Aktif', value: `${stats.advancedStats?.ukmActivePercentage || 0}%`, trend: 'down' }
                         ]}
                         isLoading={isLoading}
                     />

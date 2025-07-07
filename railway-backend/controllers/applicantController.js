@@ -252,6 +252,37 @@ exports.getApplicantStats = async (req, res) => {
       } 
     });
     const highIPKRate = highIPKApplicants > 0 ? ((highIPKAccepted / highIPKApplicants) * 100).toFixed(1) : 0;
+    
+    // Average IPK calculations
+    const avgIPKAll = await Applicant.findOne({
+      attributes: [[db.sequelize.fn('AVG', db.sequelize.col('ipk')), 'avgIPK']],
+      raw: true
+    });
+    const avgIPKAccepted = await SelectionResult.findOne({
+      attributes: [[db.sequelize.fn('AVG', db.sequelize.col('ipk')), 'avgIPK']],
+      where: { statusKelulusan: 'Terima' },
+      raw: true
+    });
+    
+    // Organization and UKM percentages
+    const totalApplicantsForPercentage = await Applicant.count();
+    const orgActiveCount = await Applicant.count({ where: { ikutOrganisasi: 'Ya' } });
+    const ukmActiveCount = await Applicant.count({ where: { ikutUKM: 'Ya' } });
+    const orgActivePercentage = totalApplicantsForPercentage > 0 ? ((orgActiveCount / totalApplicantsForPercentage) * 100).toFixed(0) : 0;
+    const ukmActivePercentage = totalApplicantsForPercentage > 0 ? ((ukmActiveCount / totalApplicantsForPercentage) * 100).toFixed(0) : 0;
+    
+    // Dominant income category
+    const incomeStats = await Applicant.findAll({
+      attributes: [
+        'penghasilanOrtu',
+        [db.sequelize.fn('COUNT', db.sequelize.col('penghasilanOrtu')), 'count']
+      ],
+      group: ['penghasilanOrtu'],
+      order: [[db.sequelize.fn('COUNT', db.sequelize.col('penghasilanOrtu')), 'DESC']],
+      limit: 1,
+      raw: true
+    });
+    const dominantIncome = incomeStats.length > 0 ? incomeStats[0].penghasilanOrtu : 'Tidak Diketahui';
 
     // Penghasilan Analysis
     const lowIncomeApplicants = await Applicant.count({ 
@@ -340,6 +371,15 @@ exports.getApplicantStats = async (req, res) => {
         name: highIPKRate >= lowIncomeRate && highIPKRate >= orgRate ? 'IPK ≥ 3.5' : 
               lowIncomeRate >= orgRate ? 'Penghasilan Rendah' : 'Aktif Organisasi',
         rate: Math.max(parseFloat(highIPKRate), parseFloat(lowIncomeRate), parseFloat(orgRate))
+      },
+      
+      // Advanced statistics
+      advancedStats: {
+        avgIPKAll: avgIPKAll?.avgIPK ? parseFloat(avgIPKAll.avgIPK).toFixed(2) : '0.00',
+        avgIPKAccepted: avgIPKAccepted?.avgIPK ? parseFloat(avgIPKAccepted.avgIPK).toFixed(2) : '0.00',
+        dominantIncome: dominantIncome,
+        orgActivePercentage: parseInt(orgActivePercentage),
+        ukmActivePercentage: parseInt(ukmActivePercentage)
       }
     });
   } catch (error) {
