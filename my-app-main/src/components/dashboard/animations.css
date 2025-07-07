@@ -122,8 +122,8 @@
 }
 
 .scroll-animate.visible {
-  opacity: 1;
-  transform: translateY(0);
+  opacity: 1 !important;
+  transform: translateY(0) !important;
 }
 
 .scroll-animate-left {
@@ -166,6 +166,17 @@
 .animate-delay-4 { animation-delay: 0.4s; opacity: 0; }
 .animate-delay-5 { animation-delay: 0.5s; opacity: 0; }
 .animate-delay-6 { animation-delay: 0.6s; opacity: 0; }
+
+/* Force visibility for scroll animations */
+.scroll-animate:not(.visible) {
+  opacity: 0 !important;
+  visibility: hidden;
+}
+
+.scroll-animate.visible {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
 
 /* Hover animations */
 .card-hover {

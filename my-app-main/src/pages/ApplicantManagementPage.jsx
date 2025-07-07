@@ -296,49 +296,57 @@ const ApplicantManagementPage = () => {
       {/* Statistics Cards */}
       {statistics && (
         <Row className="g-3 mb-4" ref={statsRef}>
-          <Col md={3} className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.1s'}}>
-            <Card className="stats-card border-0 h-100 card-hover">
-              <Card.Body className="text-center p-3">
-                <div className="stats-icon bg-primary bg-opacity-10 rounded-circle mx-auto mb-2">
-                  <PersonPlusFill className="text-primary icon-pulse" size={20} />
-                </div>
-                <h6 className="text-muted mb-1">Total Pendaftar</h6>
-                <div className="fs-4 fw-bold text-primary counter-number">{statistics.total}</div>
-              </Card.Body>
-            </Card>
+          <Col md={3}>
+            <div className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.1s'}}>
+              <Card className="stats-card border-0 h-100 card-hover">
+                <Card.Body className="text-center p-3">
+                  <div className="stats-icon bg-primary bg-opacity-10 rounded-circle mx-auto mb-2">
+                    <PersonPlusFill className="text-primary icon-pulse" size={20} />
+                  </div>
+                  <h6 className="text-muted mb-1">Total Pendaftar</h6>
+                  <div className="fs-4 fw-bold text-primary counter-number">{statistics.total}</div>
+                </Card.Body>
+              </Card>
+            </div>
           </Col>
-          <Col md={3} className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.2s'}}>
-            <Card className="stats-card border-0 h-100 card-hover">
-              <Card.Body className="text-center p-3">
-                <div className="stats-icon bg-success bg-opacity-10 rounded-circle mx-auto mb-2">
-                  <CheckCircle className="text-success icon-hover" size={20} />
-                </div>
-                <h6 className="text-muted mb-1">Diterima</h6>
-                <div className="fs-4 fw-bold text-success counter-number">{statistics.diterima}</div>
-              </Card.Body>
-            </Card>
+          <Col md={3}>
+            <div className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.2s'}}>
+              <Card className="stats-card border-0 h-100 card-hover">
+                <Card.Body className="text-center p-3">
+                  <div className="stats-icon bg-success bg-opacity-10 rounded-circle mx-auto mb-2">
+                    <CheckCircle className="text-success icon-hover" size={20} />
+                  </div>
+                  <h6 className="text-muted mb-1">Diterima</h6>
+                  <div className="fs-4 fw-bold text-success counter-number">{statistics.diterima}</div>
+                </Card.Body>
+              </Card>
+            </div>
           </Col>
-          <Col md={3} className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.3s'}}>
-            <Card className="stats-card border-0 h-100 card-hover">
-              <Card.Body className="text-center p-3">
-                <div className="stats-icon bg-danger bg-opacity-10 rounded-circle mx-auto mb-2">
-                  <XCircle className="text-danger icon-hover" size={20} />
-                </div>
-                <h6 className="text-muted mb-1">Ditolak</h6>
-                <div className="fs-4 fw-bold text-danger counter-number">{statistics.ditolak}</div>
-              </Card.Body>
-            </Card>
+          <Col md={3}>
+            <div className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.3s'}}>
+              <Card className="stats-card border-0 h-100 card-hover">
+                <Card.Body className="text-center p-3">
+                  <div className="stats-icon bg-danger bg-opacity-10 rounded-circle mx-auto mb-2">
+                    <XCircle className="text-danger icon-hover" size={20} />
+                  </div>
+                  <h6 className="text-muted mb-1">Ditolak</h6>
+                  <div className="fs-4 fw-bold text-danger counter-number">{statistics.ditolak}</div>
+                </Card.Body>
+              </Card>
+            </div>
           </Col>
-          <Col md={3} className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.4s'}}>
-            <Card className="stats-card border-0 h-100 card-hover">
-              <Card.Body className="text-center p-3">
-                <div className="stats-icon bg-info bg-opacity-10 rounded-circle mx-auto mb-2">
-                  <BarChart className="text-info icon-pulse" size={20} />
-                </div>
-                <h6 className="text-muted mb-1">Rata-rata IPK</h6>
-                <div className="fs-4 fw-bold text-info counter-number">{statistics.avgIPK.toFixed(2)}</div>
-              </Card.Body>
-            </Card>
+          <Col md={3}>
+            <div className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.4s'}}>
+              <Card className="stats-card border-0 h-100 card-hover">
+                <Card.Body className="text-center p-3">
+                  <div className="stats-icon bg-info bg-opacity-10 rounded-circle mx-auto mb-2">
+                    <BarChart className="text-info icon-pulse" size={20} />
+                  </div>
+                  <h6 className="text-muted mb-1">Rata-rata IPK</h6>
+                  <div className="fs-4 fw-bold text-info counter-number">{statistics.avgIPK.toFixed(2)}</div>
+                </Card.Body>
+              </Card>
+            </div>
           </Col>
         </Row>
       )}
