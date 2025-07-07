@@ -169,11 +169,11 @@
 
 /* Force visibility for scroll animations */
 .scroll-animate:not(.visible) {
-  opacity: 0 !important;
+  opacity: 0;
 }
 
 .scroll-animate.visible {
-  opacity: 1 !important;
+  opacity: 1;
 }
 
 /* Hover animations */

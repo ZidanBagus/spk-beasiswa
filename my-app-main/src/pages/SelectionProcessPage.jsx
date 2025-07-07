@@ -285,7 +285,7 @@ const SelectionProcessPage = () => {
             </div>
 
             {/* Progress Modal */}
-            <Modal show={showProgress} backdrop="static" keyboard={false} centered>
+            <Modal show={showProgress} backdrop="static" keyboard={false} centered className="progress-modal">
                 <Modal.Body className="text-center p-4">
                     <div className="mb-3">
                         <Spinner animation="border" variant="primary" style={{width: '3rem', height: '3rem'}} />
@@ -293,8 +293,8 @@ const SelectionProcessPage = () => {
                     <h5 className="mb-3">Memproses...</h5>
                     <ProgressBar 
                         now={processProgress} 
-                        className="mb-3" 
-                        style={{height: '8px'}} 
+                        className="mb-3 progress-animated" 
+                        style={{height: '8px', '--progress-width': `${processProgress}%`}} 
                         animated 
                     />
                     <div className="small text-muted">
@@ -485,7 +485,9 @@ const SelectionProcessPage = () => {
 
             {/* Tree Visualization */}
             <div className="mb-4">
-                <TreeVisualization isModelTrained={isModelTrained} />
+                <div className="tree-container">
+                    <TreeVisualization isModelTrained={isModelTrained} />
+                </div>
             </div>
 
             {/* Evaluation Results */}
