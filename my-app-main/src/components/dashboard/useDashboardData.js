@@ -71,6 +71,7 @@ const useDashboardData = () => {
             setStats({
                 summary,
                 applicants: applicantStatsRes || stats.applicants,
+                advancedStats: applicantStatsRes?.advancedStats || {},
                 charts: {
                     ipk: processChartData('ipk', chartConfig.ipk.labels, item => {
                         const ipk = parseFloat(item.ipk);
