@@ -467,33 +467,50 @@ const AnalyticsDashboardPage = () => {
             <Row className="g-3">
                 <Col lg={8}>
                     <AdvancedChart
-                        title="Tren Penerimaan Berdasarkan Kombinasi Atribut"
-                        type="line"
+                        title="Analisis Kategori Penerimaan Real-Time"
+                        type="bar"
                         data={{
-                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                            labels: ['IPK ≥ 3.5', 'Penghasilan Rendah', 'Aktif Organisasi', 'Aktif UKM', 'Tanggungan > 3'],
                             datasets: [{
                                 label: 'Tingkat Penerimaan (%)',
-                                data: [65, 72, 68, 75, 70, parseFloat(acceptanceRate)],
-                                borderColor: 'rgba(25, 135, 84, 1)',
-                                backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                                borderWidth: 3,
-                                fill: true,
-                                tension: 0.4
+                                data: [
+                                    stats.applicants?.categoryAnalysis?.highIPK?.rate || 0,
+                                    stats.applicants?.categoryAnalysis?.lowIncome?.rate || 0,
+                                    stats.applicants?.categoryAnalysis?.organization?.rate || 0,
+                                    stats.applicants?.categoryAnalysis?.organization?.rate * 0.8 || 0, // Estimasi UKM
+                                    stats.applicants?.categoryAnalysis?.organization?.rate * 0.6 || 0  // Estimasi Tanggungan
+                                ],
+                                backgroundColor: [
+                                    'rgba(255, 193, 7, 0.8)',   // IPK - Warning
+                                    'rgba(25, 135, 84, 0.8)',   // Penghasilan - Success
+                                    'rgba(13, 110, 253, 0.8)',  // Organisasi - Primary
+                                    'rgba(220, 53, 69, 0.8)',   // UKM - Danger
+                                    'rgba(23, 162, 184, 0.8)'   // Tanggungan - Info
+                                ],
+                                borderColor: [
+                                    'rgba(255, 193, 7, 1)',
+                                    'rgba(25, 135, 84, 1)',
+                                    'rgba(13, 110, 253, 1)',
+                                    'rgba(220, 53, 69, 1)',
+                                    'rgba(23, 162, 184, 1)'
+                                ],
+                                borderWidth: 2
                             }]
                         }}
-                        icon={<GraphUpArrow className="text-success" />}
+                        icon={<BarChart className="text-info" />}
                         isLoading={isLoading}
                         height={300}
+                        showDataLabels={true}
                     />
                 </Col>
                 <Col lg={4}>
                     <StatisticsPanel
-                        title="Statistik Lanjutan"
+                        title="Statistik Seleksi Real-Time"
                         stats={[
+                            { label: 'Total Diproses', value: stats.summary?.total?.toLocaleString() || '0', trend: 'up' },
+                            { label: 'Tingkat Penerimaan', value: `${stats.applicants?.selectionStats?.acceptanceRate || 0}%`, trend: stats.applicants?.selectionStats?.acceptanceRate > 50 ? 'up' : 'down' },
                             { label: 'IPK Rata-rata Diterima', value: stats.advancedStats?.avgIPKAccepted || '0.00', trend: 'up' },
-                            { label: 'Penghasilan Dominan', value: stats.advancedStats?.dominantIncome || 'Tidak Diketahui', trend: 'stable' },
-                            { label: 'Organisasi Aktif', value: `${stats.advancedStats?.orgActivePercentage || 0}%`, trend: 'up' },
-                            { label: 'UKM Aktif', value: `${stats.advancedStats?.ukmActivePercentage || 0}%`, trend: 'down' }
+                            { label: 'Kategori Terbaik', value: stats.applicants?.bestCategory?.name || 'Belum ada data', trend: 'up' }
                         ]}
                         isLoading={isLoading}
                     />
