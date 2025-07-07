@@ -60,6 +60,20 @@ const ApplicantManagementPage = () => {
       // Calculate statistics
       if (data.applicants && data.applicants.length > 0) {
         calculateStatistics(data.applicants);
+      } else {
+        // Set default statistics if no data
+        setStatistics({
+          total: totalItems || 0,
+          diterima: 0,
+          ditolak: 0,
+          avgIPK: 0,
+          prodiDistribution: {},
+          ipkRanges: {
+            'Sangat Baik (≥3.5)': 0,
+            'Baik (3.0-3.49)': 0,
+            'Cukup (<3.0)': 0
+          }
+        });
       }
     } catch (err) {
       const fetchError = err.message || 'Gagal memuat data pendaftar.';
@@ -104,6 +118,24 @@ const ApplicantManagementPage = () => {
   useEffect(() => {
     fetchApplicants(currentPage, searchTerm, itemsPerPage);
   }, [fetchApplicants, currentPage, searchTerm, itemsPerPage]);
+
+  // Initialize statistics on mount
+  useEffect(() => {
+    if (!statistics) {
+      setStatistics({
+        total: 0,
+        diterima: 0,
+        ditolak: 0,
+        avgIPK: 0,
+        prodiDistribution: {},
+        ipkRanges: {
+          'Sangat Baik (≥3.5)': 0,
+          'Baik (3.0-3.49)': 0,
+          'Cukup (<3.0)': 0
+        }
+      });
+    }
+  }, [statistics]);
 
   const handleAddApplicant = () => { setEditingApplicant(null); setIsAddModalOpen(true); };
   const handleUploadApplicants = () => { setIsUploadModalOpen(true); };
