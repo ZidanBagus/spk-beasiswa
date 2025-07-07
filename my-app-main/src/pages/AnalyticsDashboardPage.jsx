@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Container, Row, Col, Card, Alert, Badge, Button } from 'react-bootstrap';
 import '../components/dashboard/analytics.css';
 import '../components/dashboard/enhanced-analytics.css';
+import '../components/dashboard/animations.css';
 import {
     PeopleFill, Award, GraphUpArrow, Lightning,
     BarChartSteps, Diagram3Fill, PuzzleFill, PersonVcard,
@@ -270,70 +271,78 @@ const AnalyticsDashboardPage = () => {
         <Container fluid className="py-4 px-4 bg-light">
             {/* Analytics Cards */}
             <Row className="g-3 mb-4">
-                <Col lg={3} sm={6}>
-                    <AnalyticsCard
-                        title="Total Pendaftar"
-                        value={stats.applicants.totalApplicants}
-                        icon={<PeopleFill />}
-                        variant="primary"
-                        trend="up"
-                        trendValue="+12%"
-                        isLoading={isLoading}
-                    />
+                <Col lg={3} sm={6} className="animate-fade-up animate-delay-1">
+                    <div className="card-hover">
+                        <AnalyticsCard
+                            title="Total Pendaftar"
+                            value={stats.applicants.totalApplicants}
+                            icon={<PeopleFill className="icon-pulse" />}
+                            variant="primary"
+                            trend="up"
+                            trendValue="+12%"
+                            isLoading={isLoading}
+                        />
+                    </div>
                 </Col>
-                <Col lg={3} sm={6}>
-                    <AnalyticsCard
-                        title="Tingkat Penerimaan"
-                        value={`${acceptanceRate}%`}
-                        icon={<Award />}
-                        variant="success"
-                        progress={{
-                            label: 'Target 70%',
-                            percentage: acceptanceRate
-                        }}
-                        isLoading={isLoading}
-                    />
+                <Col lg={3} sm={6} className="animate-fade-up animate-delay-2">
+                    <div className="card-hover">
+                        <AnalyticsCard
+                            title="Tingkat Penerimaan"
+                            value={`${acceptanceRate}%`}
+                            icon={<Award className="icon-hover" />}
+                            variant="success"
+                            progress={{
+                                label: 'Target 70%',
+                                percentage: acceptanceRate
+                            }}
+                            isLoading={isLoading}
+                        />
+                    </div>
                 </Col>
-                <Col lg={3} sm={6}>
-                    <AnalyticsCard
-                        title="Pendaftar Hari Ini"
-                        value={stats.applicants.applicantsToday}
-                        icon={<Lightning />}
-                        variant="info"
-                        subtitle="vs. 45 kemarin"
-                        trend="up"
-                        trendValue="+5"
-                        isLoading={isLoading}
-                    />
+                <Col lg={3} sm={6} className="animate-fade-up animate-delay-3">
+                    <div className="card-hover">
+                        <AnalyticsCard
+                            title="Pendaftar Hari Ini"
+                            value={stats.applicants.applicantsToday}
+                            icon={<Lightning className="icon-pulse" />}
+                            variant="info"
+                            subtitle="vs. 45 kemarin"
+                            trend="up"
+                            trendValue="+5"
+                            isLoading={isLoading}
+                        />
+                    </div>
                 </Col>
-                <Col lg={3} sm={6}>
-                    <AnalyticsCard
-                        title="Rata-rata IPK"
-                        value="3.45"
-                        icon={<GraphUpArrow />}
-                        variant="warning"
-                        trend="up"
-                        trendValue="+0.05"
-                        isLoading={isLoading}
-                    />
+                <Col lg={3} sm={6} className="animate-fade-up animate-delay-4">
+                    <div className="card-hover">
+                        <AnalyticsCard
+                            title="Rata-rata IPK"
+                            value="3.45"
+                            icon={<GraphUpArrow className="icon-hover" />}
+                            variant="warning"
+                            trend="up"
+                            trendValue="+0.05"
+                            isLoading={isLoading}
+                        />
+                    </div>
                 </Col>
             </Row>
 
             {/* Header Analisis 5 Atribut */}
             <Row className="g-3 mb-4">
-                <Col xs={12}>
-                    <Card className="enhanced-card">
+                <Col xs={12} className="animate-scale-in animate-delay-5">
+                    <Card className="enhanced-card card-hover gradient-animated">
                         <Card.Header className="bg-gradient-primary text-white enhanced-card-header">
                             <div className="d-flex align-items-center justify-content-between">
                                 <div className="d-flex align-items-center">
-                                    <BarChartSteps className="me-2" size={24} />
+                                    <BarChartSteps className="me-2 icon-pulse" size={24} />
                                     <h4 className="mb-0 fw-bold">Analisis 5 Atribut Utama Seleksi Beasiswa</h4>
                                 </div>
                                 <div className="d-flex align-items-center gap-2">
-                                    <Badge bg="light" text="dark" className="px-3 py-2 fw-semibold">
+                                    <Badge bg="light" text="dark" className="px-3 py-2 fw-semibold counter-number">
                                         {stats.summary.total} Total Data
                                     </Badge>
-                                    <Badge bg="success" className="px-3 py-2 fw-semibold">
+                                    <Badge bg="success" className="px-3 py-2 fw-semibold counter-number">
                                         {acceptanceRate}% Diterima
                                     </Badge>
                                 </div>
@@ -351,59 +360,69 @@ const AnalyticsDashboardPage = () => {
 
             {/* Grid 5 Chart Atribut */}
             <Row className="g-3 mb-4">
-                <Col lg={6} md={12}>
-                    <AdvancedChart
-                        title="Distribusi Berdasarkan IPK"
-                        type="bar"
-                        data={stats.charts.ipk}
-                        icon={<TrophyFill className="text-warning" />}
-                        isLoading={isLoading}
-                        height={320}
-                        showDataLabels={true}
-                    />
+                <Col lg={6} md={12} className="animate-fade-left animate-delay-1">
+                    <div className="animate-chart card-hover">
+                        <AdvancedChart
+                            title="Distribusi Berdasarkan IPK"
+                            type="bar"
+                            data={stats.charts.ipk}
+                            icon={<TrophyFill className="text-warning icon-hover" />}
+                            isLoading={isLoading}
+                            height={320}
+                            showDataLabels={true}
+                        />
+                    </div>
                 </Col>
-                <Col lg={6} md={12}>
-                    <AdvancedChart
-                        title="Distribusi Berdasarkan Penghasilan Orang Tua"
-                        type="bar"
-                        data={stats.charts.penghasilan}
-                        icon={<CashStack className="text-success" />}
-                        isLoading={isLoading}
-                        height={320}
-                        showDataLabels={true}
-                    />
+                <Col lg={6} md={12} className="animate-fade-right animate-delay-2">
+                    <div className="animate-chart card-hover">
+                        <AdvancedChart
+                            title="Distribusi Berdasarkan Penghasilan Orang Tua"
+                            type="bar"
+                            data={stats.charts.penghasilan}
+                            icon={<CashStack className="text-success icon-hover" />}
+                            isLoading={isLoading}
+                            height={320}
+                            showDataLabels={true}
+                        />
+                    </div>
                 </Col>
-                <Col lg={4} md={6}>
-                    <AdvancedChart
-                        title="Distribusi Berdasarkan Jumlah Tanggungan"
-                        type="doughnut"
-                        data={stats.charts.tanggungan}
-                        icon={<People className="text-info" />}
-                        isLoading={isLoading}
-                        height={280}
-                    />
+                <Col lg={4} md={6} className="animate-fade-up animate-delay-3">
+                    <div className="animate-chart card-hover">
+                        <AdvancedChart
+                            title="Distribusi Berdasarkan Jumlah Tanggungan"
+                            type="doughnut"
+                            data={stats.charts.tanggungan}
+                            icon={<People className="text-info icon-pulse" />}
+                            isLoading={isLoading}
+                            height={280}
+                        />
+                    </div>
                 </Col>
-                <Col lg={4} md={6}>
-                    <AdvancedChart
-                        title="Keikutsertaan Organisasi"
-                        type="bar"
-                        data={stats.charts.organisasi}
-                        icon={<Diagram3Fill className="text-primary" />}
-                        isLoading={isLoading}
-                        height={280}
-                        showDataLabels={true}
-                    />
+                <Col lg={4} md={6} className="animate-fade-up animate-delay-4">
+                    <div className="animate-chart card-hover">
+                        <AdvancedChart
+                            title="Keikutsertaan Organisasi"
+                            type="bar"
+                            data={stats.charts.organisasi}
+                            icon={<Diagram3Fill className="text-primary icon-hover" />}
+                            isLoading={isLoading}
+                            height={280}
+                            showDataLabels={true}
+                        />
+                    </div>
                 </Col>
-                <Col lg={4} md={12}>
-                    <AdvancedChart
-                        title="Keikutsertaan UKM"
-                        type="bar"
-                        data={stats.charts.ukm}
-                        icon={<Activity className="text-danger" />}
-                        isLoading={isLoading}
-                        height={280}
-                        showDataLabels={true}
-                    />
+                <Col lg={4} md={12} className="animate-fade-up animate-delay-5">
+                    <div className="animate-chart card-hover">
+                        <AdvancedChart
+                            title="Keikutsertaan UKM"
+                            type="bar"
+                            data={stats.charts.ukm}
+                            icon={<Activity className="text-danger icon-hover" />}
+                            isLoading={isLoading}
+                            height={280}
+                            showDataLabels={true}
+                        />
+                    </div>
                 </Col>
             </Row>
 
@@ -466,55 +485,59 @@ const AnalyticsDashboardPage = () => {
 
             {/* Tren & Statistik Lanjutan */}
             <Row className="g-3">
-                <Col lg={8}>
-                    <AdvancedChart
-                        title="Analisis Kategori Penerimaan Real-Time"
-                        type="bar"
-                        data={{
-                            labels: ['IPK ≥ 3.5', 'Penghasilan Rendah', 'Aktif Organisasi', 'Aktif UKM', 'Tanggungan > 3'],
-                            datasets: [{
-                                label: 'Tingkat Penerimaan (%)',
-                                data: [
-                                    stats.applicants?.categoryAnalysis?.highIPK?.rate || Math.random() * 80 + 10,
-                                    stats.applicants?.categoryAnalysis?.lowIncome?.rate || Math.random() * 70 + 15,
-                                    stats.applicants?.categoryAnalysis?.organization?.rate || Math.random() * 60 + 20,
-                                    stats.applicants?.categoryAnalysis?.organization?.rate * 0.8 || Math.random() * 50 + 25,
-                                    stats.applicants?.categoryAnalysis?.organization?.rate * 0.6 || Math.random() * 40 + 30
-                                ],
-                                backgroundColor: [
-                                    'rgba(255, 193, 7, 0.8)',   // IPK - Warning
-                                    'rgba(25, 135, 84, 0.8)',   // Penghasilan - Success
-                                    'rgba(13, 110, 253, 0.8)',  // Organisasi - Primary
-                                    'rgba(220, 53, 69, 0.8)',   // UKM - Danger
-                                    'rgba(23, 162, 184, 0.8)'   // Tanggungan - Info
-                                ],
-                                borderColor: [
-                                    'rgba(255, 193, 7, 1)',
-                                    'rgba(25, 135, 84, 1)',
-                                    'rgba(13, 110, 253, 1)',
-                                    'rgba(220, 53, 69, 1)',
-                                    'rgba(23, 162, 184, 1)'
-                                ],
-                                borderWidth: 2
-                            }]
-                        }}
-                        icon={<BarChart className="text-info" />}
-                        isLoading={isLoading}
-                        height={300}
-                        showDataLabels={true}
-                    />
+                <Col lg={8} className="animate-fade-left animate-delay-1">
+                    <div className="animate-chart card-hover">
+                        <AdvancedChart
+                            title="Analisis Kategori Penerimaan Real-Time"
+                            type="bar"
+                            data={{
+                                labels: ['IPK ≥ 3.5', 'Penghasilan Rendah', 'Aktif Organisasi', 'Aktif UKM', 'Tanggungan > 3'],
+                                datasets: [{
+                                    label: 'Tingkat Penerimaan (%)',
+                                    data: [
+                                        stats.applicants?.categoryAnalysis?.highIPK?.rate || Math.random() * 80 + 10,
+                                        stats.applicants?.categoryAnalysis?.lowIncome?.rate || Math.random() * 70 + 15,
+                                        stats.applicants?.categoryAnalysis?.organization?.rate || Math.random() * 60 + 20,
+                                        stats.applicants?.categoryAnalysis?.organization?.rate * 0.8 || Math.random() * 50 + 25,
+                                        stats.applicants?.categoryAnalysis?.organization?.rate * 0.6 || Math.random() * 40 + 30
+                                    ],
+                                    backgroundColor: [
+                                        'rgba(255, 193, 7, 0.8)',   // IPK - Warning
+                                        'rgba(25, 135, 84, 0.8)',   // Penghasilan - Success
+                                        'rgba(13, 110, 253, 0.8)',  // Organisasi - Primary
+                                        'rgba(220, 53, 69, 0.8)',   // UKM - Danger
+                                        'rgba(23, 162, 184, 0.8)'   // Tanggungan - Info
+                                    ],
+                                    borderColor: [
+                                        'rgba(255, 193, 7, 1)',
+                                        'rgba(25, 135, 84, 1)',
+                                        'rgba(13, 110, 253, 1)',
+                                        'rgba(220, 53, 69, 1)',
+                                        'rgba(23, 162, 184, 1)'
+                                    ],
+                                    borderWidth: 2
+                                }]
+                            }}
+                            icon={<BarChart className="text-info icon-pulse" />}
+                            isLoading={isLoading}
+                            height={300}
+                            showDataLabels={true}
+                        />
+                    </div>
                 </Col>
-                <Col lg={4}>
-                    <StatisticsPanel
-                        title="Statistik Seleksi Real-Time"
-                        stats={[
-                            { label: 'Total Diproses', value: stats.summary?.total?.toLocaleString() || '0', trend: 'up' },
-                            { label: 'Tingkat Penerimaan', value: `${acceptanceRate}%`, trend: parseFloat(acceptanceRate) > 50 ? 'up' : 'down' },
-                            { label: 'IPK Rata-rata Diterima', value: stats.advancedStats?.avgIPKAccepted || '0.00', trend: 'up' },
-                            { label: 'Total Pendaftar', value: stats.applicants?.totalApplicants?.toLocaleString() || '0', trend: 'up' }
-                        ]}
-                        isLoading={isLoading}
-                    />
+                <Col lg={4} className="animate-fade-right animate-delay-2">
+                    <div className="card-hover">
+                        <StatisticsPanel
+                            title="Statistik Seleksi Real-Time"
+                            stats={[
+                                { label: 'Total Diproses', value: stats.summary?.total?.toLocaleString() || '0', trend: 'up' },
+                                { label: 'Tingkat Penerimaan', value: `${acceptanceRate}%`, trend: parseFloat(acceptanceRate) > 50 ? 'up' : 'down' },
+                                { label: 'IPK Rata-rata Diterima', value: stats.advancedStats?.avgIPKAccepted || '0.00', trend: 'up' },
+                                { label: 'Total Pendaftar', value: stats.applicants?.totalApplicants?.toLocaleString() || '0', trend: 'up' }
+                            ]}
+                            isLoading={isLoading}
+                        />
+                    </div>
                 </Col>
             </Row>
         </Container>
