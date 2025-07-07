@@ -5,7 +5,7 @@ import '../components/dashboard/enhanced-analytics.css';
 import {
     PeopleFill, Award, GraphUpArrow, Lightning,
     BarChartSteps, Diagram3Fill, PuzzleFill, PersonVcard,
-    TrophyFill, CashStack, People, Activity
+    TrophyFill, CashStack, People, Activity, BarChart
 } from 'react-bootstrap-icons';
 import AnalyticsCard from '../components/dashboard/AnalyticsCard';
 import AdvancedChart from '../components/dashboard/AdvancedChart';
