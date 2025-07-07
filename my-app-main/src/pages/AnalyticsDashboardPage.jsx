@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import useScrollAnimation from '../hooks/useScrollAnimation';
+import InteractiveFilter from '../components/dashboard/InteractiveFilter';
+import ProfileInsights from '../components/dashboard/ProfileInsights';
 import { Container, Row, Col, Card, Alert, Badge, Button } from 'react-bootstrap';
 import '../components/dashboard/analytics.css';
 import '../components/dashboard/enhanced-analytics.css';
@@ -30,6 +32,7 @@ const AnalyticsDashboardPage = () => {
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activeFilters, setActiveFilters] = useState({});
 
     // Scroll animation refs
     const [summaryRef, summaryVisible] = useScrollAnimation({ threshold: 0.2 });
@@ -334,6 +337,19 @@ const AnalyticsDashboardPage = () => {
                 </Col>
             </Row>
 
+            {/* Interactive Filter */}
+            <InteractiveFilter 
+                onFilterChange={setActiveFilters}
+                activeFilters={activeFilters}
+                stats={stats}
+            />
+
+            {/* Profile Insights */}
+            <ProfileInsights 
+                stats={stats}
+                activeFilters={activeFilters}
+            />
+
             {/* Header Analisis 5 Atribut */}
             <Row className="g-3 mb-4">
                 <Col xs={12} className="animate-scale-in animate-delay-5">
@@ -351,6 +367,11 @@ const AnalyticsDashboardPage = () => {
                                     <Badge bg="success" className="px-3 py-2 fw-semibold counter-number">
                                         {acceptanceRate}% Diterima
                                     </Badge>
+                                    {Object.keys(activeFilters).length > 0 && (
+                                        <Badge bg="warning" className="px-3 py-2 fw-semibold">
+                                            {Object.keys(activeFilters).length} Filter Aktif
+                                        </Badge>
+                                    )}
                                 </div>
                             </div>
                         </Card.Header>
@@ -358,6 +379,9 @@ const AnalyticsDashboardPage = () => {
                             <p className="text-muted mb-0">
                                 Dashboard ini menampilkan analisis mendalam terhadap 5 atribut utama dalam seleksi beasiswa: 
                                 <strong> IPK, Penghasilan Orang Tua, Jumlah Tanggungan, Keikutsertaan Organisasi, dan Keikutsertaan UKM</strong>.
+                                {Object.keys(activeFilters).length > 0 && (
+                                    <span className="text-primary"> Data saat ini difilter berdasarkan kriteria yang dipilih.</span>
+                                )}
                             </p>
                         </Card.Body>
                     </Card>
