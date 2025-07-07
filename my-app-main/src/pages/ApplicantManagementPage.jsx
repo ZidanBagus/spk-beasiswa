@@ -42,7 +42,7 @@ const ApplicantManagementPage = () => {
   const [statistics, setStatistics] = useState(null);
 
   // Scroll animations
-  const [statsRef, statsVisible] = useScrollAnimation({ threshold: 0.2 });
+  const [statsRef, statsVisible] = useScrollAnimation({ threshold: 0.1 });
   const [tableRef, tableVisible] = useScrollAnimation({ threshold: 0.1 });
 
   const fetchApplicants = useCallback(async (page = 1, search = '', limit = itemsPerPage, appliedFilters = filters) => {
