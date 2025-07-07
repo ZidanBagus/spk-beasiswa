@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import useScrollAnimation from '../hooks/useScrollAnimation';
 import { Container, Row, Col, Card, Alert, Badge, Button } from 'react-bootstrap';
 import '../components/dashboard/analytics.css';
 import '../components/dashboard/enhanced-analytics.css';
@@ -29,6 +30,11 @@ const AnalyticsDashboardPage = () => {
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    // Scroll animation refs
+    const [summaryRef, summaryVisible] = useScrollAnimation({ threshold: 0.2 });
+    const [chartsRef, chartsVisible] = useScrollAnimation({ threshold: 0.1 });
+    const [finalRef, finalVisible] = useScrollAnimation({ threshold: 0.1 });
 
     useEffect(() => {
         fetchDashboardData();
@@ -427,52 +433,52 @@ const AnalyticsDashboardPage = () => {
             </Row>
 
             {/* Ringkasan Analisis Atribut */}
-            <Row className="g-3 mb-4">
+            <Row className="g-3 mb-4" ref={summaryRef}>
                 <Col xs={12}>
-                    <Card className="shadow-sm border-0">
+                    <Card className={`shadow-sm border-0 card-hover scroll-animate-scale ${summaryVisible ? 'visible' : ''}`}>
                         <Card.Header className="bg-light">
                             <h6 className="mb-0 fw-semibold">Ringkasan Analisis Atribut</h6>
                         </Card.Header>
                         <Card.Body>
                             <Row className="g-3">
                                 <Col md={2} sm={4} xs={6} className="text-center">
-                                    <div className="p-3 bg-warning bg-opacity-10 rounded">
-                                        <TrophyFill className="text-warning mb-2" size={24} />
+                                    <div className={`p-3 bg-warning bg-opacity-10 rounded scroll-animate ${summaryVisible ? 'visible' : ''}`} style={{transitionDelay: '0.1s'}}>
+                                        <TrophyFill className="text-warning mb-2 icon-hover" size={24} />
                                         <div className="fw-bold">IPK Tertinggi</div>
                                         <small className="text-muted">Kategori {'>'}3.75</small>
                                     </div>
                                 </Col>
                                 <Col md={2} sm={4} xs={6} className="text-center">
-                                    <div className="p-3 bg-success bg-opacity-10 rounded">
-                                        <CashStack className="text-success mb-2" size={24} />
+                                    <div className={`p-3 bg-success bg-opacity-10 rounded scroll-animate ${summaryVisible ? 'visible' : ''}`} style={{transitionDelay: '0.2s'}}>
+                                        <CashStack className="text-success mb-2 icon-hover" size={24} />
                                         <div className="fw-bold">Penghasilan</div>
                                         <small className="text-muted">Mayoritas Rendah</small>
                                     </div>
                                 </Col>
                                 <Col md={2} sm={4} xs={6} className="text-center">
-                                    <div className="p-3 bg-info bg-opacity-10 rounded">
-                                        <People className="text-info mb-2" size={24} />
+                                    <div className={`p-3 bg-info bg-opacity-10 rounded scroll-animate ${summaryVisible ? 'visible' : ''}`} style={{transitionDelay: '0.3s'}}>
+                                        <People className="text-info mb-2 icon-hover" size={24} />
                                         <div className="fw-bold">Tanggungan</div>
                                         <small className="text-muted">Rata-rata 3 orang</small>
                                     </div>
                                 </Col>
                                 <Col md={2} sm={4} xs={6} className="text-center">
-                                    <div className="p-3 bg-primary bg-opacity-10 rounded">
-                                        <Diagram3Fill className="text-primary mb-2" size={24} />
+                                    <div className={`p-3 bg-primary bg-opacity-10 rounded scroll-animate ${summaryVisible ? 'visible' : ''}`} style={{transitionDelay: '0.4s'}}>
+                                        <Diagram3Fill className="text-primary mb-2 icon-hover" size={24} />
                                         <div className="fw-bold">Organisasi</div>
                                         <small className="text-muted">{stats.charts.organisasi?.datasets?.[0]?.data?.[0] || 0} Ya, {stats.charts.organisasi?.datasets?.[0]?.data?.[1] || 0} Tidak</small>
                                     </div>
                                 </Col>
                                 <Col md={2} sm={4} xs={6} className="text-center">
-                                    <div className="p-3 bg-danger bg-opacity-10 rounded">
-                                        <Activity className="text-danger mb-2" size={24} />
+                                    <div className={`p-3 bg-danger bg-opacity-10 rounded scroll-animate ${summaryVisible ? 'visible' : ''}`} style={{transitionDelay: '0.5s'}}>
+                                        <Activity className="text-danger mb-2 icon-hover" size={24} />
                                         <div className="fw-bold">UKM</div>
                                         <small className="text-muted">{stats.charts.ukm?.datasets?.[0]?.data?.[0] || 0} Ya, {stats.charts.ukm?.datasets?.[0]?.data?.[1] || 0} Tidak</small>
                                     </div>
                                 </Col>
                                 <Col md={2} sm={4} xs={6} className="text-center">
-                                    <div className="p-3 bg-secondary bg-opacity-10 rounded">
-                                        <Award className="text-secondary mb-2" size={24} />
+                                    <div className={`p-3 bg-secondary bg-opacity-10 rounded scroll-animate ${summaryVisible ? 'visible' : ''}`} style={{transitionDelay: '0.6s'}}>
+                                        <Award className="text-secondary mb-2 icon-hover" size={24} />
                                         <div className="fw-bold">Acceptance</div>
                                         <small className="text-muted">{acceptanceRate}% Rate</small>
                                     </div>
@@ -484,9 +490,9 @@ const AnalyticsDashboardPage = () => {
             </Row>
 
             {/* Tren & Statistik Lanjutan */}
-            <Row className="g-3">
-                <Col lg={8} className="animate-fade-left animate-delay-1">
-                    <div className="animate-chart card-hover">
+            <Row className="g-3" ref={finalRef}>
+                <Col lg={8}>
+                    <div className={`card-hover scroll-animate-left ${finalVisible ? 'visible' : ''}`}>
                         <AdvancedChart
                             title="Analisis Kategori Penerimaan Real-Time"
                             type="bar"
@@ -525,8 +531,8 @@ const AnalyticsDashboardPage = () => {
                         />
                     </div>
                 </Col>
-                <Col lg={4} className="animate-fade-right animate-delay-2">
-                    <div className="card-hover">
+                <Col lg={4}>
+                    <div className={`card-hover scroll-animate-right ${finalVisible ? 'visible' : ''}`} style={{transitionDelay: '0.2s'}}>
                         <StatisticsPanel
                             title="Statistik Seleksi Real-Time"
                             stats={[
