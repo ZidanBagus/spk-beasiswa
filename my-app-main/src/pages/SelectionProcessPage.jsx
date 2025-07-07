@@ -9,9 +9,6 @@ import ProcessStepper from '../components/selection/ProcessStepper';
 import TreeVisualization from '../components/selection/TreeVisualization';
 import EvaluationResults from '../components/selection/EvaluationResults';
 import './SelectionProcessPage.css';
-import '../components/dashboard/animations.css';
-import '../components/dashboard/pulse-animation.css';
-import useScrollAnimation from '../hooks/useScrollAnimation';
 
 const PROCESS_STEPS = ['Persiapan Data', 'Latih Model', 'Uji Model', 'Terapkan Model'];
 
@@ -33,12 +30,6 @@ const SelectionProcessPage = () => {
     const [startTime, setStartTime] = useState(null);
 
     const { attributes: selectedAttributesList } = useAttributes();
-
-    // Scroll animations
-    const [stepperRef, stepperVisible] = useScrollAnimation({ threshold: 0.2 });
-    const [statsRef, statsVisible] = useScrollAnimation({ threshold: 0.1 });
-    const [actionsRef, actionsVisible] = useScrollAnimation({ threshold: 0.1 });
-    const [resultsRef, resultsVisible] = useScrollAnimation({ threshold: 0.1 });
 
     useEffect(() => {
         const storedTrainingIds = JSON.parse(sessionStorage.getItem('trainingSetIds'));
@@ -285,7 +276,7 @@ const SelectionProcessPage = () => {
             </div>
 
             {/* Progress Modal */}
-            <Modal show={showProgress} backdrop="static" keyboard={false} centered className="progress-modal">
+            <Modal show={showProgress} backdrop="static" keyboard={false} centered>
                 <Modal.Body className="text-center p-4">
                     <div className="mb-3">
                         <Spinner animation="border" variant="primary" style={{width: '3rem', height: '3rem'}} />
@@ -293,8 +284,8 @@ const SelectionProcessPage = () => {
                     <h5 className="mb-3">Memproses...</h5>
                     <ProgressBar 
                         now={processProgress} 
-                        className="mb-3 progress-animated" 
-                        style={{height: '8px', '--progress-width': `${processProgress}%`}} 
+                        className="mb-3" 
+                        style={{height: '8px'}} 
                         animated 
                     />
                     <div className="small text-muted">
@@ -307,75 +298,64 @@ const SelectionProcessPage = () => {
             </Modal>
 
             {/* Process Stepper */}
-            <div ref={stepperRef} className={`scroll-animate-scale ${stepperVisible ? 'visible' : ''}`}>
-                <ProcessStepper currentStep={currentStep} steps={PROCESS_STEPS} />
-            </div>
+            <ProcessStepper currentStep={currentStep} steps={PROCESS_STEPS} />
 
             {/* Enhanced Data Summary */}
-            <Row className="g-4 mb-4" ref={statsRef}>
+            <Row className="g-4 mb-4">
                 <Col md={3}>
-                    <div className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.1s'}}>
-                        <Card className="stats-card border-0 h-100 card-hover">
-                            <Card.Body className="text-center p-4">
-                                <div className="stats-icon bg-primary bg-opacity-10 rounded-circle mx-auto mb-3">
-                                    <PlayFill className="text-primary icon-pulse" size={24} />
-                                </div>
-                                <h6 className="text-muted mb-1">Data Latih</h6>
-                                <div className="fs-2 fw-bold text-primary mb-2 counter-number">{trainingIds.length}</div>
-                                <small className="text-muted">Data untuk membangun pohon</small>
-                            </Card.Body>
-                        </Card>
-                    </div>
+                    <Card className="stats-card border-0 h-100">
+                        <Card.Body className="text-center p-4">
+                            <div className="stats-icon bg-primary bg-opacity-10 rounded-circle mx-auto mb-3">
+                                <PlayFill className="text-primary" size={24} />
+                            </div>
+                            <h6 className="text-muted mb-1">Data Latih</h6>
+                            <div className="fs-2 fw-bold text-primary mb-2">{trainingIds.length}</div>
+                            <small className="text-muted">Data untuk membangun pohon</small>
+                        </Card.Body>
+                    </Card>
                 </Col>
                 <Col md={3}>
-                    <div className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.2s'}}>
-                        <Card className="stats-card border-0 h-100 card-hover">
-                            <Card.Body className="text-center p-4">
-                                <div className="stats-icon bg-success bg-opacity-10 rounded-circle mx-auto mb-3">
-                                    <Clipboard2Check className="text-success icon-hover" size={24} />
-                                </div>
-                                <h6 className="text-muted mb-1">Data Uji</h6>
-                                <div className="fs-2 fw-bold text-success mb-2 counter-number">{testingIds.length}</div>
-                                <small className="text-muted">Data untuk evaluasi pohon</small>
-                            </Card.Body>
-                        </Card>
-                    </div>
+                    <Card className="stats-card border-0 h-100">
+                        <Card.Body className="text-center p-4">
+                            <div className="stats-icon bg-success bg-opacity-10 rounded-circle mx-auto mb-3">
+                                <Clipboard2Check className="text-success" size={24} />
+                            </div>
+                            <h6 className="text-muted mb-1">Data Uji</h6>
+                            <div className="fs-2 fw-bold text-success mb-2">{testingIds.length}</div>
+                            <small className="text-muted">Data untuk evaluasi pohon</small>
+                        </Card.Body>
+                    </Card>
                 </Col>
                 <Col md={3}>
-                    <div className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.3s'}}>
-                        <Card className="stats-card border-0 h-100 card-hover">
-                            <Card.Body className="text-center p-4">
-                                <div className="stats-icon bg-info bg-opacity-10 rounded-circle mx-auto mb-3">
-                                    <CheckCircle className="text-info icon-hover" size={24} />
-                                </div>
-                                <h6 className="text-muted mb-1">Atribut Aktif</h6>
-                                <div className="fs-2 fw-bold text-info mb-2 counter-number">
-                                    {selectedAttributesList.filter(attr => attr.isSelected).length}
-                                </div>
-                                <small className="text-muted">Fitur yang digunakan</small>
-                            </Card.Body>
-                        </Card>
-                    </div>
+                    <Card className="stats-card border-0 h-100">
+                        <Card.Body className="text-center p-4">
+                            <div className="stats-icon bg-info bg-opacity-10 rounded-circle mx-auto mb-3">
+                                <CheckCircle className="text-info" size={24} />
+                            </div>
+                            <h6 className="text-muted mb-1">Atribut Aktif</h6>
+                            <div className="fs-2 fw-bold text-info mb-2">
+                                {selectedAttributesList.filter(attr => attr.isSelected).length}
+                            </div>
+                            <small className="text-muted">Fitur yang digunakan</small>
+                        </Card.Body>
+                    </Card>
                 </Col>
                 <Col md={3}>
-                    <div className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.4s'}}>
-                        <Card className="stats-card border-0 h-100 card-hover">
-                            <Card.Body className="text-center p-4">
-                                <div className="stats-icon bg-warning bg-opacity-10 rounded-circle mx-auto mb-3">
-                                    <Cpu className="text-warning icon-pulse" size={24} />
-                                </div>
-                                <h6 className="text-muted mb-1">Algoritma</h6>
-                                <div className="fs-4 fw-bold text-warning mb-2 counter-number">C4.5</div>
-                                <small className="text-muted">Decision Tree</small>
-                            </Card.Body>
-                        </Card>
-                    </div>
+                    <Card className="stats-card border-0 h-100">
+                        <Card.Body className="text-center p-4">
+                            <div className="stats-icon bg-warning bg-opacity-10 rounded-circle mx-auto mb-3">
+                                <Cpu className="text-warning" size={24} />
+                            </div>
+                            <h6 className="text-muted mb-1">Algoritma</h6>
+                            <div className="fs-4 fw-bold text-warning mb-2">C4.5</div>
+                            <small className="text-muted">Decision Tree</small>
+                        </Card.Body>
+                    </Card>
                 </Col>
             </Row>
 
             {/* Action Cards */}
-            <div ref={actionsRef} className={`scroll-animate-left ${actionsVisible ? 'visible' : ''}`}>
-                <Accordion defaultActiveKey="0" className="mb-4">
+            <Accordion defaultActiveKey="0" className="mb-4">
                 <Accordion.Item eventKey="0">
                     <Accordion.Header>
                         <Cpu className="me-2" />
@@ -394,7 +374,7 @@ const SelectionProcessPage = () => {
                             </Col>
                             <Col md={4} className="d-flex align-items-center">
                                 <Button 
-                                    className={`w-100 btn-animated ${isLoading && currentAction === 'train' ? 'processing' : ''} ${isModelTrained ? 'success' : ''}`}
+                                    className="w-100"
                                     onClick={handleTrainModel} 
                                     disabled={isLoading}
                                     size="lg"
@@ -429,7 +409,7 @@ const SelectionProcessPage = () => {
                             <Col md={4} className="d-flex align-items-center">
                                 <Button 
                                     variant="success" 
-                                    className={`w-100 btn-animated ${isLoading && currentAction === 'test' ? 'processing' : ''}`}
+                                    className="w-100"
                                     onClick={() => handleTestModel('test')} 
                                     disabled={!isModelTrained || isLoading}
                                     size="lg"
@@ -464,7 +444,7 @@ const SelectionProcessPage = () => {
                             <Col md={4} className="d-flex align-items-center">
                                 <Button 
                                     variant="secondary" 
-                                    className={`w-100 btn-animated ${isLoading && currentAction === 'test-all' ? 'processing' : ''}`}
+                                    className="w-100"
                                     onClick={() => handleTestModel('test-all')} 
                                     disabled={!isModelTrained || isLoading}
                                     size="lg"
@@ -480,25 +460,20 @@ const SelectionProcessPage = () => {
                         </Row>
                     </Accordion.Body>
                 </Accordion.Item>
-                </Accordion>
-            </div>
+            </Accordion>
 
             {/* Tree Visualization */}
             <div className="mb-4">
-                <div className="tree-container">
-                    <TreeVisualization isModelTrained={isModelTrained} />
-                </div>
+                <TreeVisualization isModelTrained={isModelTrained} />
             </div>
 
             {/* Evaluation Results */}
             {evaluationResults && (
-                <div className="mb-4" ref={resultsRef}>
-                    <div className={`scroll-animate-right ${resultsVisible ? 'visible' : ''}`}>
-                        <EvaluationResults 
-                            evaluationResults={evaluationResults}
-                            onDownload={() => toast.success('Hasil evaluasi berhasil diunduh!')}
-                        />
-                    </div>
+                <div className="mb-4">
+                    <EvaluationResults 
+                        evaluationResults={evaluationResults}
+                        onDownload={() => toast.success('Hasil evaluasi berhasil diunduh!')}
+                    />
                 </div>
             )}
             {/* Model Info Modal */}
