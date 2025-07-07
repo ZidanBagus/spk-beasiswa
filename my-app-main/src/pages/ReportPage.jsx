@@ -16,6 +16,8 @@ import reportService from '../services/reportService';
 import batchService from '../services/batchService';
 import { toast } from 'react-toastify';
 import './ReportPage.css';
+import '../components/dashboard/animations.css';
+import useScrollAnimation from '../hooks/useScrollAnimation';
 
 const ReportPage = () => {
   const location = useLocation();
@@ -50,6 +52,11 @@ const ReportPage = () => {
   });
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [activeTab, setActiveTab] = useState('data');
+
+  // Scroll animations
+  const [filterRef, filterVisible] = useScrollAnimation({ threshold: 0.2 });
+  const [statsRef, statsVisible] = useScrollAnimation({ threshold: 0.1 });
+  const [tableRef, tableVisible] = useScrollAnimation({ threshold: 0.1 });
 
   // Fetch batches
   useEffect(() => {
@@ -481,7 +488,7 @@ const ReportPage = () => {
       
       {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
 
-      <Card className="shadow-sm mb-4 border-0">
+      <Card className="shadow-sm mb-4 border-0" ref={filterRef}>
         <Card.Header className="bg-light border-bottom-0 pt-3 pb-2 px-4">
           <div className="d-flex justify-content-between align-items-center">
             <h5 className="fw-medium mb-0 d-flex align-items-center">
@@ -580,70 +587,78 @@ const ReportPage = () => {
       </Card>
 
       {/* Enhanced Statistics Cards */}
-      <Row className="g-4 mb-4">
+      <Row className="g-4 mb-4" ref={statsRef}>
         <Col lg={3} md={6}>
-          <Card className="stats-card border-0 h-100">
-            <Card.Body className="text-center p-4">
-              <div className="stats-icon bg-primary bg-opacity-10 rounded-circle mx-auto mb-3">
-                <People className="text-primary" size={24} />
-              </div>
-              <h6 className="text-muted mb-1">Total Pendaftar</h6>
-              <div className="fs-2 fw-bold text-primary mb-2">
-                {isLoading ? <Spinner size="sm" /> : summary.total.toLocaleString()}
-              </div>
-              <small className="text-muted">Berdasarkan filter aktif</small>
-            </Card.Body>
-          </Card>
+          <div className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.1s'}}>
+            <Card className="stats-card border-0 h-100 card-hover">
+              <Card.Body className="text-center p-4">
+                <div className="stats-icon bg-primary bg-opacity-10 rounded-circle mx-auto mb-3">
+                  <People className="text-primary icon-pulse" size={24} />
+                </div>
+                <h6 className="text-muted mb-1">Total Pendaftar</h6>
+                <div className="fs-2 fw-bold text-primary mb-2 counter-number">
+                  {isLoading ? <Spinner size="sm" /> : summary.total.toLocaleString()}
+                </div>
+                <small className="text-muted">Berdasarkan filter aktif</small>
+              </Card.Body>
+            </Card>
+          </div>
         </Col>
         
         <Col lg={3} md={6}>
-          <Card className="stats-card border-0 h-100">
-            <Card.Body className="text-center p-4">
-              <div className="stats-icon bg-success bg-opacity-10 rounded-circle mx-auto mb-3">
-                <CheckCircleFill className="text-success" size={24} />
-              </div>
-              <h6 className="text-muted mb-1">Diterima</h6>
-              <div className="fs-2 fw-bold text-success mb-2">
-                {isLoading ? <Spinner size="sm" /> : summary.Terima.toLocaleString()}
-              </div>
-              <Badge bg="success" className="fs-6">{getAcceptanceRate()}%</Badge>
-            </Card.Body>
-          </Card>
+          <div className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.2s'}}>
+            <Card className="stats-card border-0 h-100 card-hover">
+              <Card.Body className="text-center p-4">
+                <div className="stats-icon bg-success bg-opacity-10 rounded-circle mx-auto mb-3">
+                  <CheckCircleFill className="text-success icon-hover" size={24} />
+                </div>
+                <h6 className="text-muted mb-1">Diterima</h6>
+                <div className="fs-2 fw-bold text-success mb-2 counter-number">
+                  {isLoading ? <Spinner size="sm" /> : summary.Terima.toLocaleString()}
+                </div>
+                <Badge bg="success" className="fs-6">{getAcceptanceRate()}%</Badge>
+              </Card.Body>
+            </Card>
+          </div>
         </Col>
         
         <Col lg={3} md={6}>
-          <Card className="stats-card border-0 h-100">
-            <Card.Body className="text-center p-4">
-              <div className="stats-icon bg-danger bg-opacity-10 rounded-circle mx-auto mb-3">
-                <XCircleFill className="text-danger" size={24} />
-              </div>
-              <h6 className="text-muted mb-1">Ditolak</h6>
-              <div className="fs-2 fw-bold text-danger mb-2">
-                {isLoading ? <Spinner size="sm" /> : summary.Tidak.toLocaleString()}
-              </div>
-              <Badge bg="danger" className="fs-6">{(100 - getAcceptanceRate()).toFixed(1)}%</Badge>
-            </Card.Body>
-          </Card>
+          <div className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.3s'}}>
+            <Card className="stats-card border-0 h-100 card-hover">
+              <Card.Body className="text-center p-4">
+                <div className="stats-icon bg-danger bg-opacity-10 rounded-circle mx-auto mb-3">
+                  <XCircleFill className="text-danger icon-hover" size={24} />
+                </div>
+                <h6 className="text-muted mb-1">Ditolak</h6>
+                <div className="fs-2 fw-bold text-danger mb-2 counter-number">
+                  {isLoading ? <Spinner size="sm" /> : summary.Tidak.toLocaleString()}
+                </div>
+                <Badge bg="danger" className="fs-6">{(100 - getAcceptanceRate()).toFixed(1)}%</Badge>
+              </Card.Body>
+            </Card>
+          </div>
         </Col>
         
         <Col lg={3} md={6}>
-          <Card className="stats-card border-0 h-100">
-            <Card.Body className="text-center p-4">
-              <div className="stats-icon bg-info bg-opacity-10 rounded-circle mx-auto mb-3">
-                <ArrowUpShort className="text-info" size={24} />
-              </div>
-              <h6 className="text-muted mb-1">Tingkat Penerimaan</h6>
-              <div className="fs-2 fw-bold text-info mb-2">
-                {isLoading ? <Spinner size="sm" /> : `${getAcceptanceRate()}%`}
-              </div>
-              <ProgressBar 
-                variant="info" 
-                now={getAcceptanceRate()} 
-                style={{ height: '4px' }}
-                className="rounded-pill"
-              />
-            </Card.Body>
-          </Card>
+          <div className={`scroll-animate ${statsVisible ? 'visible' : ''}`} style={{transitionDelay: '0.4s'}}>
+            <Card className="stats-card border-0 h-100 card-hover">
+              <Card.Body className="text-center p-4">
+                <div className="stats-icon bg-info bg-opacity-10 rounded-circle mx-auto mb-3">
+                  <ArrowUpShort className="text-info icon-pulse" size={24} />
+                </div>
+                <h6 className="text-muted mb-1">Tingkat Penerimaan</h6>
+                <div className="fs-2 fw-bold text-info mb-2 counter-number">
+                  {isLoading ? <Spinner size="sm" /> : `${getAcceptanceRate()}%`}
+                </div>
+                <ProgressBar 
+                  variant="info" 
+                  now={getAcceptanceRate()} 
+                  style={{ height: '4px' }}
+                  className="rounded-pill progress-animated"
+                />
+              </Card.Body>
+            </Card>
+          </div>
         </Col>
       </Row>
 
@@ -727,7 +742,7 @@ const ReportPage = () => {
       )}
       
       {/* Main Data Table */}
-      <Card className="shadow-sm border-0">
+      <Card className="shadow-sm border-0" ref={tableRef}>
         <Card.Header className="bg-light d-flex justify-content-between align-items-center">
           <h5 className="mb-0 fw-semibold">Data Hasil Seleksi</h5>
           {reportData.length > 0 && (
@@ -760,7 +775,7 @@ const ReportPage = () => {
               </Button>
             </div>
           ) : (
-            <div className="table-responsive">
+            <div className={`table-responsive scroll-animate ${tableVisible ? 'visible' : ''}`}>
               <Table hover className="mb-0 align-middle">
                 <thead className="table-dark">
                   <tr>
