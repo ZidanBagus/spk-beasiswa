@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Row, Col, Badge, ProgressBar } from 'react-bootstrap';
-import { Lightbulb, TrendingUp, Target, Award } from 'react-bootstrap-icons';
+import { Lightbulb, TrendingUp, Bullseye, Award } from 'react-bootstrap-icons';
 
 const ProfileInsights = ({ stats, activeFilters }) => {
     const generateInsights = () => {
@@ -104,7 +104,7 @@ const ProfileInsights = ({ stats, activeFilters }) => {
                 <Card className="h-100 border-0 shadow-sm">
                     <Card.Header className="bg-gradient-success text-white">
                         <div className="d-flex align-items-center">
-                            <Target className="me-2" size={20} />
+                            <Bullseye className="me-2" size={20} />
                             <h6 className="mb-0 fw-bold">Profil Pendaftar Ideal</h6>
                         </div>
                     </Card.Header>
