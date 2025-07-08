@@ -14,9 +14,9 @@ import AnalyticsCard from '../components/dashboard/AnalyticsCard';
 import AdvancedChart from '../components/dashboard/AdvancedChart';
 import StatisticsPanel from '../components/dashboard/StatisticsPanel';
 import InteractiveSegmentation from '../components/InteractiveSegmentation';
-import SegmentComparisonTool from '../components/SegmentComparisonTool';
-import ModelDiagnostics from '../components/ModelDiagnostics';
-import DecisionFlowViz from '../components/DecisionFlowViz';
+import SmartRecommendationEngine from '../components/SmartRecommendationEngine';
+import PerformanceMonitor from '../components/PerformanceMonitor';
+import AdvancedDataExplorer from '../components/AdvancedDataExplorer';
 import applicantService from '../services/applicantService';
 import reportService from '../services/reportService';
 import { chartConfig } from '../components/dashboard/chartConfig';
@@ -562,20 +562,20 @@ const AnalyticsDashboardPage = () => {
                 </Col>
             </Row>
 
-            {/* New Advanced Analytics Components */}
+            {/* Professional Analytics Tools */}
             <Row className="g-3 mb-4">
                 <Col lg={6}>
-                    <SegmentComparisonTool isLoading={isLoading} />
+                    <SmartRecommendationEngine isLoading={isLoading} />
                 </Col>
                 <Col lg={6}>
-                    <ModelDiagnostics isLoading={isLoading} />
+                    <PerformanceMonitor isLoading={isLoading} />
                 </Col>
             </Row>
 
             <Row className="g-3" ref={finalRef}>
                 <Col xs={12}>
                     <div className={`card-hover scroll-animate-up ${finalVisible ? 'visible' : ''}`}>
-                        <DecisionFlowViz isLoading={isLoading} />
+                        <AdvancedDataExplorer isLoading={isLoading} />
                     </div>
                 </Col>
             </Row>
