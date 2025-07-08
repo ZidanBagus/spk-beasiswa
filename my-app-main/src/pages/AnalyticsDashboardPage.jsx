@@ -449,7 +449,7 @@ const AnalyticsDashboardPage = () => {
                                     </div>
                                 </Col>
                                 <Col md={2} sm={4} xs={6} className="text-center">
-                                    <div className={`p-3 bg-success bg-opacity-10 rounded scroll-animate ${summaryVisible ? 'visible' : ''}`} style={{transitionDelay: '0.2s'}}>
+                                    <div className={`p-3 zbg-success bg-opacity-10 rounded scroll-animate ${summaryVisible ? 'visible' : ''}`} style={{transitionDelay: '0.2s'}}>
                                         <CashStack className="text-success mb-2 icon-hover" size={24} />
                                         <div className="fw-bold">Penghasilan</div>
                                         <small className="text-muted">Mayoritas Rendah</small>
