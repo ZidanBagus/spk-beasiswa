@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Badge, Alert, Button } from 'react-bootstrap';
-import { Lightbulb, CheckCircle, XCircle, AlertTriangle } from 'react-bootstrap-icons';
+import { Lightbulb, CheckCircle, XCircle, ExclamationTriangle } from 'react-bootstrap-icons';
 import reportService from '../services/reportService';
 
 const SmartRecommendationEngine = ({ isLoading }) => {
@@ -128,7 +128,7 @@ const SmartRecommendationEngine = ({ isLoading }) => {
     const getIconByType = (type) => {
         switch (type) {
             case 'success': return <CheckCircle className="text-success" />;
-            case 'warning': return <AlertTriangle className="text-warning" />;
+            case 'warning': return <ExclamationTriangle className="text-warning" />;
             case 'info': return <Lightbulb className="text-info" />;
             default: return <XCircle className="text-danger" />;
         }
