@@ -94,7 +94,7 @@ const HistoricalTrends = ({ isLoading }) => {
             <Card className="h-100">
                 <Card.Header>
                     <h6 className="mb-0">
-                        <TrendingUp className="me-2" />
+                        <GraphUp className="me-2" />
                         Tren Historis (2021-2024)
                     </h6>
                 </Card.Header>
