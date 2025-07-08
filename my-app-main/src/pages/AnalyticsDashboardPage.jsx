@@ -12,6 +12,10 @@ import {
 import AnalyticsCard from '../components/dashboard/AnalyticsCard';
 import AdvancedChart from '../components/dashboard/AdvancedChart';
 import StatisticsPanel from '../components/dashboard/StatisticsPanel';
+import InteractiveFilter from '../components/InteractiveFilter';
+import CorrelationHeatmap from '../components/CorrelationHeatmap';
+import WhatIfCalculator from '../components/WhatIfCalculator';
+import HistoricalTrends from '../components/HistoricalTrends';
 import applicantService from '../services/applicantService';
 import reportService from '../services/reportService';
 import { chartConfig } from '../components/dashboard/chartConfig';
@@ -28,8 +32,10 @@ const AnalyticsDashboardPage = () => {
             ukm: null
         }
     });
+    const [filteredStats, setFilteredStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activeFilters, setActiveFilters] = useState({});
 
     // Scroll animation refs
     const [summaryRef, summaryVisible] = useScrollAnimation({ threshold: 0.2 });
@@ -275,6 +281,12 @@ const AnalyticsDashboardPage = () => {
 
     return (
         <Container fluid className="py-4 px-4 bg-light">
+            {/* Interactive Filter */}
+            <InteractiveFilter 
+                onFilterChange={setActiveFilters} 
+                stats={stats}
+            />
+
             {/* Analytics Cards */}
             <Row className="g-3 mb-4">
                 <Col lg={3} sm={6} className="animate-fade-up animate-delay-1">
@@ -486,6 +498,26 @@ const AnalyticsDashboardPage = () => {
                             </Row>
                         </Card.Body>
                     </Card>
+                </Col>
+            </Row>
+
+            {/* Advanced Analytics Section */}
+            <Row className="g-3 mb-4">
+                <Col lg={6}>
+                    <CorrelationHeatmap 
+                        correlationData={stats?.correlations} 
+                        isLoading={isLoading}
+                    />
+                </Col>
+                <Col lg={6}>
+                    <HistoricalTrends isLoading={isLoading} />
+                </Col>
+            </Row>
+
+            {/* What-If Calculator */}
+            <Row className="g-3 mb-4">
+                <Col xs={12}>
+                    <WhatIfCalculator currentStats={stats?.applicants} />
                 </Col>
             </Row>
 

@@ -40,7 +40,9 @@ const AdvancedChart = ({
     isLoading = false,
     height = 300,
     showDataLabels = false,
-    customOptions = {}
+    customOptions = {},
+    onChartClick = null,
+    enableDrillDown = false
 }) => {
     const chartOptions = useMemo(() => {
         const baseOptions = {
@@ -65,7 +67,10 @@ const AdvancedChart = ({
                     borderColor: 'rgba(255, 255, 255, 0.1)',
                     borderWidth: 1,
                     cornerRadius: 8,
-                    displayColors: true
+                    displayColors: true,
+                    callbacks: {
+                        afterLabel: enableDrillDown ? () => '🔍 Klik untuk detail' : undefined
+                    }
                 },
                 datalabels: {
                     display: showDataLabels,
@@ -221,7 +226,19 @@ const AdvancedChart = ({
 
         const chartProps = {
             data,
-            options: mergedOptions
+            options: {
+                ...mergedOptions,
+                onClick: enableDrillDown && onChartClick ? (event, elements) => {
+                    if (elements.length > 0) {
+                        const element = elements[0];
+                        const datasetIndex = element.datasetIndex;
+                        const index = element.index;
+                        const label = data.labels[index];
+                        const value = data.datasets[datasetIndex].data[index];
+                        onChartClick({ label, value, datasetIndex, index });
+                    }
+                } : undefined
+            }
         };
 
         switch (type) {
@@ -243,6 +260,9 @@ const AdvancedChart = ({
                     <div className="d-flex align-items-center">
                         {icon && <div className="me-2 text-primary">{icon}</div>}
                         <h6 className="mb-0 fw-semibold text-dark">{title}</h6>
+                        {enableDrillDown && (
+                            <small className="ms-2 text-muted">🔍 Klik untuk detail</small>
+                        )}
                     </div>
                     <Badge bg="light" text="dark" className="text-uppercase small">
                         {type}
