@@ -35,7 +35,7 @@ const DecisionPathAnalysis = ({ isLoading }) => {
                     <Diagram3 className="me-2" />
                     Analisis Jalur Keputusan Dominan
                 </h6>
-                <small>Pola kombinasi atribut yang mengarah ke penerimaan</small>
+                <small>Pola kombinasi atribut dari data batch seleksi yang mengarah ke penerimaan</small>
             </Card.Header>
             <Card.Body>
                 <div className="decision-paths">
@@ -67,7 +67,7 @@ const DecisionPathAnalysis = ({ isLoading }) => {
                 </div>
                 <div className="mt-3 p-2 bg-light rounded">
                     <small className="text-muted">
-                        💡 <strong>Insight:</strong> Jalur dominan menunjukkan kombinasi IPK tinggi + Penghasilan rendah + Aktif organisasi memiliki tingkat penerimaan tertinggi (93.3%)
+                        💡 <strong>Insight:</strong> Analisis jalur keputusan berdasarkan data batch seleksi menunjukkan kombinasi IPK tinggi + Penghasilan rendah + Aktif organisasi memiliki tingkat penerimaan tertinggi (93.3%)
                     </small>
                 </div>
             </Card.Body>

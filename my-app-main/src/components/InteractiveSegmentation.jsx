@@ -79,7 +79,7 @@ const InteractiveSegmentation = ({ onFilterChange, stats }) => {
                 
                 <div className="mt-3 p-2 bg-light rounded">
                     <small className="text-muted">
-                        💡 <strong>Cara Penggunaan:</strong> Klik pada segmen untuk memfilter semua grafik di dashboard. 
+                        💡 <strong>Cara Penggunaan:</strong> Klik pada segmen untuk memfilter semua grafik berdasarkan data batch seleksi saat ini. 
                         Grafik akan menampilkan data hanya untuk segmen yang dipilih.
                     </small>
                 </div>

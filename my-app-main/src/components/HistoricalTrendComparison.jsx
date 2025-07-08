@@ -15,21 +15,93 @@ const HistoricalTrendComparison = ({ isLoading }) => {
 
     const fetchBatchTrendData = async () => {
         try {
-            // Fetch all selection results to analyze by batch/period
+            // Import batch history service
+            const { default: batchHistoryService } = await import('../services/batchHistoryService');
+            
+            // Fetch current selection results
             const response = await reportService.getAllSelectionResults({ limit: 99999 });
             const results = response.results || [];
             
-            // Group data by creation date (assuming createdAt field exists)
-            const batchData = processBatchData(results);
+            // Save current batch to history if there are results
+            if (results.length > 0) {
+                const currentBatchData = {
+                    totalApplicants: results.length,
+                    accepted: results.filter(item => (item.statusKelulusan || '').trim() === 'Terima').length,
+                    rejected: results.filter(item => (item.statusKelulusan || '').trim() === 'Tidak').length
+                };
+                batchHistoryService.saveBatchResult(currentBatchData);
+            }
+            
+            // Get batch history and create chart data
+            const batchData = processBatchHistoryData(batchHistoryService);
             setTrendData(batchData.chartData);
             setBatchStats(batchData.stats);
         } catch (error) {
             console.error('Error fetching batch trend data:', error);
-            // Fallback to mock data if API fails
             setMockData();
         } finally {
             setDataLoading(false);
         }
+    };
+
+    const processBatchHistoryData = (batchHistoryService) => {
+        const history = batchHistoryService.getBatchHistory();
+        const comparisonStats = batchHistoryService.getComparisonStats();
+        
+        if (history.length === 0) {
+            return {
+                chartData: {
+                    labels: ['Belum Ada Data'],
+                    datasets: [{
+                        label: 'Tidak Ada Batch',
+                        data: [0],
+                        borderColor: 'rgb(108, 117, 125)',
+                        backgroundColor: 'rgba(108, 117, 125, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 2
+                    }]
+                },
+                stats: { current: 0, previous: 0, growth: 0, singleBatch: true }
+            };
+        }
+
+        // Create chart data from batch history
+        const labels = history.map((batch, index) => `Batch ${index + 1} (${batch.date})`);
+        const applicantData = history.map(batch => batch.totalApplicants);
+        const acceptedData = history.map(batch => batch.accepted);
+        
+        return {
+            chartData: {
+                labels,
+                datasets: [
+                    {
+                        label: 'Total Pendaftar',
+                        data: applicantData,
+                        borderColor: 'rgb(13, 110, 253)',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 3,
+                        fill: true
+                    },
+                    {
+                        label: 'Diterima',
+                        data: acceptedData,
+                        borderColor: 'rgb(25, 135, 84)',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 2,
+                        fill: false
+                    }
+                ]
+            },
+            stats: {
+                current: comparisonStats.current,
+                previous: comparisonStats.previous,
+                growth: comparisonStats.growth,
+                singleBatch: !comparisonStats.hasComparison,
+                totalBatches: history.length
+            }
+        };
     };
 
     const processBatchData = (results) => {
@@ -196,7 +268,7 @@ const HistoricalTrendComparison = ({ isLoading }) => {
                 <Card.Header>
                     <h6 className="mb-0">
                         <GraphUp className="me-2" />
-                        Analisis Tren Historis & Komparatif
+                        Riwayat Batch Seleksi
                     </h6>
                 </Card.Header>
                 <Card.Body className="d-flex justify-content-center align-items-center">
@@ -211,9 +283,9 @@ const HistoricalTrendComparison = ({ isLoading }) => {
             <Card.Header>
                 <h6 className="mb-0">
                     <GraphUp className="me-2" />
-                    Analisis Tren Historis & Komparatif
+                    Riwayat Batch Seleksi
                 </h6>
-                <small className="text-muted">Perbandingan pendaftaran periode saat ini vs sebelumnya</small>
+                <small className="text-muted">Perbandingan hasil batch seleksi dari waktu ke waktu</small>
             </Card.Header>
             <Card.Body>
                 <div style={{ height: '250px' }} className="mb-3">
@@ -247,8 +319,8 @@ const HistoricalTrendComparison = ({ isLoading }) => {
                     <small className="text-muted">
                         📈 <strong>Insight:</strong> 
                         {batchStats.singleBatch 
-                            ? `Data menunjukkan ${batchStats.current} pendaftar pada batch seleksi saat ini. Perbandingan akan tersedia setelah ada batch seleksi berikutnya.`
-                            : `Analisis berdasarkan data seleksi batch menunjukkan tren pendaftaran ${batchStats.growth > 0 ? 'meningkat' : batchStats.growth < 0 ? 'menurun' : 'stabil'} ${Math.abs(batchStats.growth)}% dibanding batch sebelumnya.`
+                            ? `Tersimpan ${batchStats.current} pendaftar pada batch seleksi saat ini. History batch akan terakumulasi setiap kali proses seleksi dilakukan.`
+                            : `Dari ${batchStats.totalBatches} batch yang tersimpan, tren pendaftaran ${batchStats.growth > 0 ? 'meningkat' : batchStats.growth < 0 ? 'menurun' : 'stabil'} ${Math.abs(batchStats.growth)}% dibanding batch sebelumnya.`
                         }
                     </small>
                 </div>
