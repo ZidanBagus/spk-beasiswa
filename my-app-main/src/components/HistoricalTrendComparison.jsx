@@ -35,68 +35,97 @@ const HistoricalTrendComparison = ({ isLoading }) => {
     const processBatchData = (results) => {
         // Group by month-year from createdAt or use current date as fallback
         const monthlyData = {};
-        const currentYear = new Date().getFullYear();
-        const previousYear = currentYear - 1;
+        const batchData = {};
         
         results.forEach(item => {
             const date = new Date(item.createdAt || item.tanggalDaftar || Date.now());
             const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            const batchKey = `Batch-${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
             
             if (!monthlyData[monthKey]) {
                 monthlyData[monthKey] = { total: 0, accepted: 0 };
             }
+            if (!batchData[batchKey]) {
+                batchData[batchKey] = { total: 0, accepted: 0, month: date.getMonth(), year: date.getFullYear() };
+            }
+            
             monthlyData[monthKey].total++;
+            batchData[batchKey].total++;
             if ((item.statusKelulusan || '').trim() === 'Terima') {
                 monthlyData[monthKey].accepted++;
+                batchData[batchKey].accepted++;
             }
         });
 
-        // Get last 6 months data
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-        const currentData = [];
-        const previousData = [];
-        const labels = [];
+        // Get available batches and sort by date
+        const availableBatches = Object.keys(batchData).sort();
         
-        for (let i = 0; i < 6; i++) {
-            const currentMonth = new Date().getMonth() - i;
-            const monthIndex = currentMonth < 0 ? 12 + currentMonth : currentMonth;
-            const currentKey = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}`;
-            const previousKey = `${previousYear}-${String(monthIndex + 1).padStart(2, '0')}`;
-            
-            labels.unshift(months[monthIndex]);
-            currentData.unshift(monthlyData[currentKey]?.total || 0);
-            previousData.unshift(monthlyData[previousKey]?.total || 0);
+        if (availableBatches.length === 0) {
+            // No data available, return mock data
+            return {
+                chartData: {
+                    labels: ['Batch 1', 'Batch 2', 'Batch 3'],
+                    datasets: [{
+                        label: 'Tidak Ada Data',
+                        data: [0, 0, 0],
+                        borderColor: 'rgb(108, 117, 125)',
+                        backgroundColor: 'rgba(108, 117, 125, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 2
+                    }]
+                },
+                stats: { current: 0, previous: 0, growth: 0 }
+            };
         }
 
-        const currentTotal = currentData.reduce((sum, val) => sum + val, 0);
-        const previousTotal = previousData.reduce((sum, val) => sum + val, 0);
-        const growth = previousTotal > 0 ? ((currentTotal - previousTotal) / previousTotal * 100).toFixed(1) : 0;
-
-        return {
-            chartData: {
-                labels,
-                datasets: [
-                    {
-                        label: `Periode Saat Ini (${currentYear})`,
-                        data: currentData,
+        // If we have multiple batches, compare them
+        if (availableBatches.length >= 2) {
+            const latestBatch = availableBatches[availableBatches.length - 1];
+            const previousBatch = availableBatches[availableBatches.length - 2];
+            
+            const currentTotal = batchData[latestBatch].total;
+            const previousTotal = batchData[previousBatch].total;
+            const growth = previousTotal > 0 ? ((currentTotal - previousTotal) / previousTotal * 100).toFixed(1) : 0;
+            
+            return {
+                chartData: {
+                    labels: availableBatches.map(batch => {
+                        const batchInfo = batchData[batch];
+                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                        return `${months[batchInfo.month]} ${batchInfo.year}`;
+                    }),
+                    datasets: [{
+                        label: 'Jumlah Pendaftar per Batch',
+                        data: availableBatches.map(batch => batchData[batch].total),
+                        borderColor: 'rgb(13, 110, 253)',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 3,
+                        fill: true
+                    }]
+                },
+                stats: { current: currentTotal, previous: previousTotal, growth }
+            };
+        } else {
+            // Only one batch available, show current data only
+            const onlyBatch = availableBatches[0];
+            const currentTotal = batchData[onlyBatch].total;
+            
+            return {
+                chartData: {
+                    labels: ['Batch Saat Ini'],
+                    datasets: [{
+                        label: 'Jumlah Pendaftar',
+                        data: [currentTotal],
                         borderColor: 'rgb(13, 110, 253)',
                         backgroundColor: 'rgba(13, 110, 253, 0.1)',
                         tension: 0.4,
                         borderWidth: 3
-                    },
-                    {
-                        label: `Periode Sebelumnya (${previousYear})`,
-                        data: previousData,
-                        borderColor: 'rgb(108, 117, 125)',
-                        backgroundColor: 'rgba(108, 117, 125, 0.1)',
-                        tension: 0.4,
-                        borderWidth: 2,
-                        borderDash: [5, 5]
-                    }
-                ]
-            },
-            stats: { current: currentTotal, previous: previousTotal, growth }
-        };
+                    }]
+                },
+                stats: { current: currentTotal, previous: 0, growth: 0, singleBatch: true }
+            };
+        }
     };
 
     const setMockData = () => {
@@ -216,8 +245,11 @@ const HistoricalTrendComparison = ({ isLoading }) => {
 
                 <div className="mt-3 p-2 bg-light rounded">
                     <small className="text-muted">
-                        📈 <strong>Insight:</strong> Analisis berdasarkan data seleksi batch menunjukkan tren pendaftaran 
-                        {batchStats.growth > 0 ? 'meningkat' : 'menurun'} {Math.abs(batchStats.growth)}% dibanding periode sebelumnya.
+                        📈 <strong>Insight:</strong> 
+                        {batchStats.singleBatch 
+                            ? `Data menunjukkan ${batchStats.current} pendaftar pada batch seleksi saat ini. Perbandingan akan tersedia setelah ada batch seleksi berikutnya.`
+                            : `Analisis berdasarkan data seleksi batch menunjukkan tren pendaftaran ${batchStats.growth > 0 ? 'meningkat' : batchStats.growth < 0 ? 'menurun' : 'stabil'} ${Math.abs(batchStats.growth)}% dibanding batch sebelumnya.`
+                        }
                     </small>
                 </div>
             </Card.Body>
