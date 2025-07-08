@@ -29,8 +29,10 @@ const AnalyticsDashboardPage = () => {
             organisasi: null,
             tanggungan: null,
             ukm: null
-        }
+        },
+        rawData: []
     });
+    const [filteredStats, setFilteredStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeSegment, setActiveSegment] = useState(null);
@@ -71,7 +73,7 @@ const AnalyticsDashboardPage = () => {
         }, { Terima: 0, Tidak: 0 });
         summary.total = results.length;
 
-        // Process chart data
+        // Process chart data with filtering capability
         const charts = {
             ipk: processChartData('ipk', results),
             penghasilan: processChartData('penghasilan', results),
@@ -84,7 +86,8 @@ const AnalyticsDashboardPage = () => {
             summary,
             applicants: applicantStats,
             advancedStats: applicantStats?.advancedStats || {},
-            charts
+            charts,
+            rawData: results // Store raw data for filtering
         });
     };
 
@@ -265,9 +268,63 @@ const AnalyticsDashboardPage = () => {
     };
 
     const acceptanceRate = useMemo(() => {
-        if (stats.summary.total === 0) return 0;
-        return ((stats.summary.Terima / stats.summary.total) * 100).toFixed(1);
-    }, [stats.summary]);
+        const currentStats = filteredStats || stats;
+        if (currentStats.summary.total === 0) return 0;
+        return ((currentStats.summary.Terima / currentStats.summary.total) * 100).toFixed(1);
+    }, [stats.summary, filteredStats]);
+
+    const handleSegmentFilter = (segment) => {
+        if (!segment || !stats.rawData.length) {
+            setFilteredStats(null);
+            setActiveSegment(null);
+            return;
+        }
+
+        setActiveSegment(segment);
+        
+        // Filter raw data based on segment
+        let filteredData = [...stats.rawData];
+        
+        switch (segment.id) {
+            case 'accepted':
+                filteredData = filteredData.filter(item => (item.statusKelulusan || '').trim() === 'Terima');
+                break;
+            case 'rejected':
+                filteredData = filteredData.filter(item => (item.statusKelulusan || '').trim() === 'Tidak');
+                break;
+            case 'high-ipk':
+                filteredData = filteredData.filter(item => parseFloat(item.ipk) > 3.5);
+                break;
+            case 'low-income':
+                filteredData = filteredData.filter(item => item.penghasilanOrtu === 'Rendah');
+                break;
+            case 'active-org':
+                filteredData = filteredData.filter(item => item.ikutOrganisasi === 'Ya');
+                break;
+        }
+
+        // Reprocess data with filtered dataset
+        const filteredSummary = filteredData.reduce((acc, curr) => {
+            const status = (curr.statusKelulusan || "Tidak").trim();
+            if (status === 'Terima') acc.Terima += 1; else acc.Tidak += 1;
+            return acc;
+        }, { Terima: 0, Tidak: 0 });
+        filteredSummary.total = filteredData.length;
+
+        const filteredCharts = {
+            ipk: processChartData('ipk', filteredData),
+            penghasilan: processChartData('penghasilan', filteredData),
+            organisasi: processGroupedChartData('organisasi', filteredData),
+            tanggungan: processChartData('tanggungan', filteredData),
+            ukm: processGroupedChartData('ukm', filteredData)
+        };
+
+        setFilteredStats({
+            summary: filteredSummary,
+            charts: filteredCharts,
+            applicants: stats.applicants
+        });
+    };
 
     if (error) {
         return (
@@ -373,9 +430,9 @@ const AnalyticsDashboardPage = () => {
                 <Col lg={6} md={12} className="animate-fade-left animate-delay-1">
                     <div className="animate-chart card-hover">
                         <AdvancedChart
-                            title="Distribusi Berdasarkan IPK"
+                            title={`Distribusi Berdasarkan IPK${activeSegment ? ` (${activeSegment.label})` : ''}`}
                             type="bar"
-                            data={stats.charts.ipk}
+                            data={(filteredStats || stats).charts.ipk}
                             icon={<TrophyFill className="text-warning icon-hover" />}
                             isLoading={isLoading}
                             height={320}
@@ -386,9 +443,9 @@ const AnalyticsDashboardPage = () => {
                 <Col lg={6} md={12} className="animate-fade-right animate-delay-2">
                     <div className="animate-chart card-hover">
                         <AdvancedChart
-                            title="Distribusi Berdasarkan Penghasilan Orang Tua"
+                            title={`Distribusi Berdasarkan Penghasilan Orang Tua${activeSegment ? ` (${activeSegment.label})` : ''}`}
                             type="bar"
-                            data={stats.charts.penghasilan}
+                            data={(filteredStats || stats).charts.penghasilan}
                             icon={<CashStack className="text-success icon-hover" />}
                             isLoading={isLoading}
                             height={320}
@@ -399,9 +456,9 @@ const AnalyticsDashboardPage = () => {
                 <Col lg={4} md={6} className="animate-fade-up animate-delay-3">
                     <div className="animate-chart card-hover">
                         <AdvancedChart
-                            title="Distribusi Berdasarkan Jumlah Tanggungan"
+                            title={`Distribusi Berdasarkan Jumlah Tanggungan${activeSegment ? ` (${activeSegment.label})` : ''}`}
                             type="doughnut"
-                            data={stats.charts.tanggungan}
+                            data={(filteredStats || stats).charts.tanggungan}
                             icon={<People className="text-info icon-pulse" />}
                             isLoading={isLoading}
                             height={280}
@@ -411,9 +468,9 @@ const AnalyticsDashboardPage = () => {
                 <Col lg={4} md={6} className="animate-fade-up animate-delay-4">
                     <div className="animate-chart card-hover">
                         <AdvancedChart
-                            title="Keikutsertaan Organisasi"
+                            title={`Keikutsertaan Organisasi${activeSegment ? ` (${activeSegment.label})` : ''}`}
                             type="bar"
-                            data={stats.charts.organisasi}
+                            data={(filteredStats || stats).charts.organisasi}
                             icon={<Diagram3Fill className="text-primary icon-hover" />}
                             isLoading={isLoading}
                             height={280}
@@ -424,9 +481,9 @@ const AnalyticsDashboardPage = () => {
                 <Col lg={4} md={12} className="animate-fade-up animate-delay-5">
                     <div className="animate-chart card-hover">
                         <AdvancedChart
-                            title="Keikutsertaan UKM"
+                            title={`Keikutsertaan UKM${activeSegment ? ` (${activeSegment.label})` : ''}`}
                             type="bar"
-                            data={stats.charts.ukm}
+                            data={(filteredStats || stats).charts.ukm}
                             icon={<Activity className="text-danger icon-hover" />}
                             isLoading={isLoading}
                             height={280}
@@ -470,14 +527,14 @@ const AnalyticsDashboardPage = () => {
                                     <div className={`p-3 bg-primary bg-opacity-10 rounded scroll-animate ${summaryVisible ? 'visible' : ''}`} style={{transitionDelay: '0.4s'}}>
                                         <Diagram3Fill className="text-primary mb-2 icon-hover" size={24} />
                                         <div className="fw-bold">Organisasi</div>
-                                        <small className="text-muted">{stats.charts.organisasi?.datasets?.[0]?.data?.[0] || 0} Ya, {stats.charts.organisasi?.datasets?.[0]?.data?.[1] || 0} Tidak</small>
+                                        <small className="text-muted">{(filteredStats || stats).charts.organisasi?.datasets?.[0]?.data?.[0] || 0} Ya, {(filteredStats || stats).charts.organisasi?.datasets?.[0]?.data?.[1] || 0} Tidak</small>
                                     </div>
                                 </Col>
                                 <Col md={2} sm={4} xs={6} className="text-center">
                                     <div className={`p-3 bg-danger bg-opacity-10 rounded scroll-animate ${summaryVisible ? 'visible' : ''}`} style={{transitionDelay: '0.5s'}}>
                                         <Activity className="text-danger mb-2 icon-hover" size={24} />
                                         <div className="fw-bold">UKM</div>
-                                        <small className="text-muted">{stats.charts.ukm?.datasets?.[0]?.data?.[0] || 0} Ya, {stats.charts.ukm?.datasets?.[0]?.data?.[1] || 0} Tidak</small>
+                                        <small className="text-muted">{(filteredStats || stats).charts.ukm?.datasets?.[0]?.data?.[0] || 0} Ya, {(filteredStats || stats).charts.ukm?.datasets?.[0]?.data?.[1] || 0} Tidak</small>
                                     </div>
                                 </Col>
                                 <Col md={2} sm={4} xs={6} className="text-center">
@@ -497,7 +554,7 @@ const AnalyticsDashboardPage = () => {
             <Row className="g-3 mb-4">
                 <Col xs={12}>
                     <InteractiveSegmentation 
-                        onFilterChange={setActiveSegment}
+                        onFilterChange={handleSegmentFilter}
                         stats={stats}
                     />
                 </Col>
@@ -559,10 +616,10 @@ const AnalyticsDashboardPage = () => {
                         <StatisticsPanel
                             title="Statistik Seleksi Real-Time"
                             stats={[
-                                { label: 'Total Diproses', value: stats.summary?.total?.toLocaleString() || '0', trend: 'up' },
+                                { label: 'Total Diproses', value: (filteredStats || stats).summary?.total?.toLocaleString() || '0', trend: 'up' },
                                 { label: 'Tingkat Penerimaan', value: `${acceptanceRate}%`, trend: parseFloat(acceptanceRate) > 50 ? 'up' : 'down' },
                                 { label: 'IPK Rata-rata Diterima', value: stats.advancedStats?.avgIPKAccepted || '0.00', trend: 'up' },
-                                { label: 'Total Pendaftar', value: stats.applicants?.totalApplicants?.toLocaleString() || '0', trend: 'up' }
+                                { label: 'Total Pendaftar', value: (filteredStats || stats).applicants?.totalApplicants?.toLocaleString() || '0', trend: 'up' }
                             ]}
                             isLoading={isLoading}
                         />
