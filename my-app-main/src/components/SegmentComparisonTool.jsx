@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Row, Col, Alert } from 'react-bootstrap';
 import { Bar } from 'react-chartjs-2';
-import { BarChart3 } from 'react-bootstrap-icons';
+import { BarChart } from 'react-bootstrap-icons';
 import axios from 'axios';
 
 const SegmentComparisonTool = ({ isLoading }) => {
@@ -102,7 +102,7 @@ const SegmentComparisonTool = ({ isLoading }) => {
             <Card className="h-100">
                 <Card.Header>
                     <h6 className="mb-0">
-                        <BarChart3 className="me-2" />
+                        <BarChart className="me-2" />
                         Alat Perbandingan Profil Segmen
                     </h6>
                 </Card.Header>
@@ -117,7 +117,7 @@ const SegmentComparisonTool = ({ isLoading }) => {
         <Card className="h-100">
             <Card.Header className="bg-primary text-white">
                 <h6 className="mb-0">
-                    <BarChart3 className="me-2" />
+                    <BarChart className="me-2" />
                     Alat Perbandingan Profil Segmen
                 </h6>
                 <small>Bandingkan karakteristik antara dua kelompok pendaftar</small>
