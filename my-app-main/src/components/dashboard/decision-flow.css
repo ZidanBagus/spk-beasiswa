@@ -1,0 +1,55 @@
+.decision-node {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.decision-node:hover {
+    transform: translateX(5px);
+}
+
+.node-content {
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.level-0 .node-content {
+    border-left-color: #0d6efd;
+}
+
+.level-1 .node-content {
+    border-left-color: #198754;
+}
+
+.level-2 .node-content {
+    border-left-color: #ffc107;
+}
+
+.level-3 .node-content {
+    border-left-color: #dc3545;
+}
+
+.level-4 .node-content {
+    border-left-color: #6f42c1;
+}
+
+.decision-tree-container {
+    font-family: 'Courier New', monospace;
+}
+
+.decision-tree-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.decision-tree-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.decision-tree-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.decision-tree-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
