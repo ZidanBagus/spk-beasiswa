@@ -12,6 +12,9 @@ import {
 import AnalyticsCard from '../components/dashboard/AnalyticsCard';
 import AdvancedChart from '../components/dashboard/AdvancedChart';
 import StatisticsPanel from '../components/dashboard/StatisticsPanel';
+import DecisionPathAnalysis from '../components/DecisionPathAnalysis';
+import InteractiveSegmentation from '../components/InteractiveSegmentation';
+import HistoricalTrendComparison from '../components/HistoricalTrendComparison';
 import applicantService from '../services/applicantService';
 import reportService from '../services/reportService';
 import { chartConfig } from '../components/dashboard/chartConfig';
@@ -30,6 +33,7 @@ const AnalyticsDashboardPage = () => {
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [activeSegment, setActiveSegment] = useState(null);
 
     // Scroll animation refs
     const [summaryRef, summaryVisible] = useScrollAnimation({ threshold: 0.2 });
@@ -449,7 +453,7 @@ const AnalyticsDashboardPage = () => {
                                     </div>
                                 </Col>
                                 <Col md={2} sm={4} xs={6} className="text-center">
-                                    <div className={`p-3 zbg-success bg-opacity-10 rounded scroll-animate ${summaryVisible ? 'visible' : ''}`} style={{transitionDelay: '0.2s'}}>
+                                    <div className={`p-3 bg-success bg-opacity-10 rounded scroll-animate ${summaryVisible ? 'visible' : ''}`} style={{transitionDelay: '0.2s'}}>
                                         <CashStack className="text-success mb-2 icon-hover" size={24} />
                                         <div className="fw-bold">Penghasilan</div>
                                         <small className="text-muted">Mayoritas Rendah</small>
@@ -486,6 +490,25 @@ const AnalyticsDashboardPage = () => {
                             </Row>
                         </Card.Body>
                     </Card>
+                </Col>
+            </Row>
+
+            {/* Advanced Analytics Features */}
+            <Row className="g-3 mb-4">
+                <Col xs={12}>
+                    <InteractiveSegmentation 
+                        onFilterChange={setActiveSegment}
+                        stats={stats}
+                    />
+                </Col>
+            </Row>
+
+            <Row className="g-3 mb-4">
+                <Col lg={8}>
+                    <DecisionPathAnalysis isLoading={isLoading} />
+                </Col>
+                <Col lg={4}>
+                    <HistoricalTrendComparison isLoading={isLoading} />
                 </Col>
             </Row>
 
