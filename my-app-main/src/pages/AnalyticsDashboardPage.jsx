@@ -16,7 +16,7 @@ import StatisticsPanel from '../components/dashboard/StatisticsPanel';
 import InteractiveSegmentation from '../components/InteractiveSegmentation';
 import SmartRecommendationEngine from '../components/SmartRecommendationEngine';
 import PerformanceMonitor from '../components/PerformanceMonitor';
-import AdvancedDataExplorer from '../components/AdvancedDataExplorer';
+import SimpleDataExplorer from '../components/SimpleDataExplorer';
 import applicantService from '../services/applicantService';
 import reportService from '../services/reportService';
 import { chartConfig } from '../components/dashboard/chartConfig';
@@ -575,7 +575,7 @@ const AnalyticsDashboardPage = () => {
             <Row className="g-3" ref={finalRef}>
                 <Col xs={12}>
                     <div className={`card-hover scroll-animate-up ${finalVisible ? 'visible' : ''}`}>
-                        <AdvancedDataExplorer isLoading={isLoading} />
+                        <SimpleDataExplorer isLoading={isLoading} />
                     </div>
                 </Col>
             </Row>
