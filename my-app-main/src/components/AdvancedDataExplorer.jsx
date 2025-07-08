@@ -240,9 +240,9 @@ const AdvancedDataExplorer = ({ isLoading }) => {
                         <Form.Select size="sm" value={filters.ipkRange} 
                                    onChange={(e) => handleFilterChange('ipkRange', e.target.value)}>
                             <option value="all">Semua IPK</option>
-                            <option value="high">IPK ≥ 3.5</option>
-                            <option value="medium">IPK 3.0-3.5</option>
-                            <option value="low">IPK < 3.0</option>
+                            <option value="high">IPK Tinggi (3.5+)</option>
+                            <option value="medium">IPK Sedang (3.0-3.5)</option>
+                            <option value="low">IPK Rendah (kurang dari 3.0)</option>
                         </Form.Select>
                     </Col>
                     <Col md="2">
