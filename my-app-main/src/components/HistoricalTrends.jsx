@@ -1,7 +1,7 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
 import { Card } from 'react-bootstrap';
-import { TrendingUp } from 'react-bootstrap-icons';
+import { GraphUp } from 'react-bootstrap-icons';
 
 const HistoricalTrends = ({ isLoading }) => {
     // Mock historical data - replace with real data from backend
@@ -109,7 +109,7 @@ const HistoricalTrends = ({ isLoading }) => {
         <Card className="h-100">
             <Card.Header>
                 <h6 className="mb-0">
-                    <TrendingUp className="me-2" />
+                    <GraphUp className="me-2" />
                     Tren Historis (2021-2024)
                 </h6>
                 <small className="text-muted">Perbandingan metrik kunci dari tahun ke tahun</small>
