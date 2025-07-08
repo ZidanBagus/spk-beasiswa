@@ -207,19 +207,19 @@ const AdvancedDataExplorer = ({ isLoading }) => {
                 {/* Quick Stats */}
                 {stats && (
                     <Row className="mb-3 text-center">
-                        <Col xs={3}>
+                        <Col xs="3">
                             <div className="text-primary fw-bold">{filteredData.length}</div>
                             <small className="text-muted">Filtered Results</small>
                         </Col>
-                        <Col xs={3}>
+                        <Col xs="3">
                             <div className="text-success fw-bold">{stats.acceptanceRate.toFixed(1)}%</div>
                             <small className="text-muted">Acceptance Rate</small>
                         </Col>
-                        <Col xs={3}>
+                        <Col xs="3">
                             <div className="text-warning fw-bold">{stats.avgIPK.toFixed(2)}</div>
                             <small className="text-muted">Avg IPK</small>
                         </Col>
-                        <Col xs={3}>
+                        <Col xs="3">
                             <div className="text-info fw-bold">{stats.lowIncomePercent.toFixed(1)}%</div>
                             <small className="text-muted">Low Income</small>
                         </Col>
@@ -228,7 +228,7 @@ const AdvancedDataExplorer = ({ isLoading }) => {
 
                 {/* Filters */}
                 <Row className="mb-3">
-                    <Col md={2}>
+                    <Col md="2">
                         <Form.Select size="sm" value={filters.status} 
                                    onChange={(e) => handleFilterChange('status', e.target.value)}>
                             <option value="all">Semua Status</option>
@@ -236,7 +236,7 @@ const AdvancedDataExplorer = ({ isLoading }) => {
                             <option value="Tidak">Ditolak</option>
                         </Form.Select>
                     </Col>
-                    <Col md={2}>
+                    <Col md="2">
                         <Form.Select size="sm" value={filters.ipkRange} 
                                    onChange={(e) => handleFilterChange('ipkRange', e.target.value)}>
                             <option value="all">Semua IPK</option>
@@ -245,7 +245,7 @@ const AdvancedDataExplorer = ({ isLoading }) => {
                             <option value="low">IPK < 3.0</option>
                         </Form.Select>
                     </Col>
-                    <Col md={2}>
+                    <Col md="2">
                         <Form.Select size="sm" value={filters.penghasilan} 
                                    onChange={(e) => handleFilterChange('penghasilan', e.target.value)}>
                             <option value="all">Semua Penghasilan</option>
@@ -254,7 +254,7 @@ const AdvancedDataExplorer = ({ isLoading }) => {
                             <option value="Tinggi">Tinggi</option>
                         </Form.Select>
                     </Col>
-                    <Col md={2}>
+                    <Col md="2">
                         <Form.Select size="sm" value={filters.organisasi} 
                                    onChange={(e) => handleFilterChange('organisasi', e.target.value)}>
                             <option value="all">Semua Organisasi</option>
@@ -262,7 +262,7 @@ const AdvancedDataExplorer = ({ isLoading }) => {
                             <option value="Tidak">Tidak Aktif</option>
                         </Form.Select>
                     </Col>
-                    <Col md={4}>
+                    <Col md="4">
                         <InputGroup size="sm">
                             <InputGroup.Text><Search /></InputGroup.Text>
                             <Form.Control
