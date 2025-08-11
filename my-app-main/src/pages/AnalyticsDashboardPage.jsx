@@ -14,6 +14,7 @@ import AnalyticsCard from '../components/dashboard/AnalyticsCard';
 import AdvancedChart from '../components/dashboard/AdvancedChart';
 import StatisticsPanel from '../components/dashboard/StatisticsPanel';
 import InteractiveSegmentation from '../components/InteractiveSegmentation';
+import CorrelationMatrix from '../components/CorrelationMatrix';
 import applicantService from '../services/applicantService';
 import reportService from '../services/reportService';
 import { chartConfig } from '../components/dashboard/chartConfig';
@@ -556,6 +557,15 @@ const AnalyticsDashboardPage = () => {
                         onFilterChange={handleSegmentFilter}
                         stats={stats}
                     />
+                </Col>
+            </Row>
+
+            {/* Advanced Correlation Analysis */}
+            <Row className="g-3 mb-4">
+                <Col xs={12}>
+                    <div className={`card-hover scroll-animate-up ${summaryVisible ? 'visible' : ''}`}>
+                        <CorrelationMatrix isLoading={isLoading} />
+                    </div>
                 </Col>
             </Row>
 
