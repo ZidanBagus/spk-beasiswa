@@ -46,8 +46,8 @@ const DataSplittingPage = () => {
     
     // Stratified sampling untuk distribusi yang lebih baik
     const performStratifiedSplit = (data, ratio) => {
-        const acceptedApplicants = data.filter(app => app.status === 'Terima');
-        const rejectedApplicants = data.filter(app => app.status === 'Tidak');
+        const acceptedApplicants = data.filter(app => (app.statusKelulusan || '').trim() === 'Terima');
+        const rejectedApplicants = data.filter(app => (app.statusKelulusan || '').trim() === 'Tidak');
         
         const shuffleArray = (array) => {
             const shuffled = [...array];
@@ -134,9 +134,9 @@ const DataSplittingPage = () => {
                 `"${row.nama}"`,
                 row.ipk,
                 row.penghasilanOrtu,
-                row.tanggungan,
-                row.organisasi ? 'Ya' : 'Tidak',
-                row.status
+                row.jmlTanggungan,
+                row.ikutOrganisasi,
+                (row.statusKelulusan || '').trim() || 'Belum Diproses'
             ].join(','))
         ].join('\n');
         
@@ -155,8 +155,8 @@ const DataSplittingPage = () => {
 
     // Calculate distribution statistics
     const getDistributionStats = (data) => {
-        const accepted = data.filter(app => app.status === 'Terima').length;
-        const rejected = data.filter(app => app.status === 'Tidak').length;
+        const accepted = data.filter(app => (app.statusKelulusan || '').trim() === 'Terima').length;
+        const rejected = data.filter(app => (app.statusKelulusan || '').trim() === 'Tidak').length;
         const total = data.length;
         return {
             accepted,
@@ -241,10 +241,10 @@ const DataSplittingPage = () => {
                                                 <td>{app.ipk}</td>
                                                 <td>
                                                     <Badge 
-                                                        bg={app.status === 'Terima' ? 'success' : 'danger'} 
+                                                        bg={(app.statusKelulusan || '').trim() === 'Terima' ? 'success' : 'danger'} 
                                                         className="fs-6"
                                                     >
-                                                        {app.status}
+                                                        {(app.statusKelulusan || '').trim() || 'Belum Diproses'}
                                                     </Badge>
                                                 </td>
                                             </tr>
@@ -443,16 +443,16 @@ const DataSplittingPage = () => {
                                         <td>{app.id}</td>
                                         <td>{app.nama}</td>
                                         <td>{app.ipk}</td>
-                                        <td>{app.penghasilanOrtu?.toLocaleString()}</td>
-                                        <td>{app.tanggungan}</td>
+                                        <td>{app.penghasilanOrtu}</td>
+                                        <td>{app.jmlTanggungan}</td>
                                         <td>
-                                            <Badge bg={app.organisasi ? 'success' : 'secondary'}>
-                                                {app.organisasi ? 'Ya' : 'Tidak'}
+                                            <Badge bg={app.ikutOrganisasi === 'Ya' ? 'success' : 'secondary'}>
+                                                {app.ikutOrganisasi || 'Tidak'}
                                             </Badge>
                                         </td>
                                         <td>
-                                            <Badge bg={app.status === 'Terima' ? 'success' : 'danger'}>
-                                                {app.status}
+                                            <Badge bg={(app.statusKelulusan || '').trim() === 'Terima' ? 'success' : 'danger'}>
+                                                {(app.statusKelulusan || '').trim() || 'Belum Diproses'}
                                             </Badge>
                                         </td>
                                     </tr>
