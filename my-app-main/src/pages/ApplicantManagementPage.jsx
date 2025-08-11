@@ -145,26 +145,57 @@ const ApplicantManagementPage = () => {
     const toastId = toast.loading("Menghapus data pendaftar...");
     setIsTableLoading(true);
     try {
-      await applicantService.deleteApplicant(applicantToDelete.id);
-      toast.update(toastId, {render: `Data "${applicantToDelete.nama}" berhasil dihapus!`, type: "success", isLoading: false, autoClose: 3000});
+      console.log('Deleting applicant with ID:', applicantToDelete.id);
+      const result = await applicantService.deleteApplicant(applicantToDelete.id);
+      console.log('Delete result:', result);
+      
+      toast.update(toastId, {
+        render: `Data "${applicantToDelete.nama}" berhasil dihapus!`, 
+        type: "success", 
+        isLoading: false, 
+        autoClose: 3000
+      });
 
+      // Update local state immediately
+      const updatedApplicants = applicants.filter(app => app.id !== applicantToDelete.id);
+      setApplicants(updatedApplicants);
+      
       const newTotalItems = totalItems - 1;
+      setTotalItems(newTotalItems);
+      
       const newTotalPages = Math.ceil(newTotalItems / itemsPerPage);
-      if (currentPage > newTotalPages && newTotalPages > 0) {
-        setCurrentPage(newTotalPages);
+      setTotalPages(newTotalPages);
+      
+      // Handle pagination after delete
+      if (updatedApplicants.length === 0 && currentPage > 1) {
+        // If current page is empty and not the first page, go to previous page
+        const newPage = currentPage - 1;
+        setCurrentPage(newPage);
+        fetchApplicants(newPage, searchTerm, itemsPerPage);
       } else if (newTotalItems === 0) {
+        // If no items left, reset to page 1
         setCurrentPage(1);
-        setApplicants([]);
-        setTotalItems(0);
         setTotalPages(0);
+      } else if (updatedApplicants.length < itemsPerPage && currentPage === totalPages) {
+        // If we're on the last page and it's not full, just update the display
+        // No need to fetch again
       } else {
+        // Refresh current page to get accurate data
         fetchApplicants(currentPage, searchTerm, itemsPerPage);
       }
+      
     } catch (err) {
-      toast.update(toastId, {render: err.message || 'Gagal menghapus data.', type: "error", isLoading: false, autoClose: 5000});
+      console.error('Delete error:', err);
+      toast.update(toastId, {
+        render: err.message || 'Gagal menghapus data. Silakan coba lagi.', 
+        type: "error", 
+        isLoading: false, 
+        autoClose: 5000
+      });
     } finally {
-        setShowDeleteConfirmModal(false);
-        setApplicantToDelete(null);
+      setIsTableLoading(false);
+      setShowDeleteConfirmModal(false);
+      setApplicantToDelete(null);
     }
   };
 
@@ -505,7 +536,12 @@ const ApplicantManagementPage = () => {
                           <Button variant="outline-primary" onClick={() => handleEditApplicant(applicant)} title="Edit Data">
                             <PencilSquare size={12} />
                           </Button>
-                          <Button variant="outline-danger" onClick={() => handleDeleteClick(applicant)} title="Hapus Data">
+                          <Button 
+                            variant="outline-danger" 
+                            onClick={() => handleDeleteClick(applicant)} 
+                            title="Hapus Data"
+                            disabled={isTableLoading}
+                          >
                             <Trash3Fill size={12} />
                           </Button>
                         </ButtonGroup>
