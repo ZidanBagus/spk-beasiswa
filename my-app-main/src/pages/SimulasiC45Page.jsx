@@ -73,29 +73,45 @@ const SimulasiC45Page = () => {
         e.preventDefault();
         const toastId = toast.loading("Memproses prediksi dengan algoritma C4.5...");
         try {
-            // Prepare data with proper formatting
+            // Prepare data with exact same format as selection process
             const dataToSend = {
+                nama: 'Simulasi Test',
+                nim: 'SIM001',
                 ipk: parseFloat(formData.ipk),
                 penghasilanOrtu: formData.penghasilanOrtu,
                 jmlTanggungan: parseInt(formData.jmlTanggungan),
-                ikutOrganisasi: formData.ikutOrganisasi === 'Ya',
-                ikutUKM: formData.ikutUKM === 'Ya'
+                ikutOrganisasi: formData.ikutOrganisasi,
+                ikutUKM: formData.ikutUKM
             };
             
-            // Get prediction from backend
+            console.log('Sending prediction data:', dataToSend);
+            
+            // Get prediction using the same endpoint as batch selection
             const result = await selectionService.predictSingle(dataToSend);
             
-            // Enhance result with detailed calculation steps
+            console.log('Prediction result:', result);
+            
+            // Calculate confidence based on decision factors
+            const confidence = calculatePredictionConfidence(dataToSend);
+            
+            // Enhance result with detailed information
             const enhancedResult = {
                 ...result,
-                inputData: dataToSend,
-                confidence: 85,
-                timestamp: new Date().toISOString()
+                inputData: {
+                    ipk: dataToSend.ipk,
+                    penghasilanOrtu: dataToSend.penghasilanOrtu,
+                    jmlTanggungan: dataToSend.jmlTanggungan,
+                    ikutOrganisasi: dataToSend.ikutOrganisasi === 'Ya',
+                    ikutUKM: dataToSend.ikutUKM === 'Ya'
+                },
+                confidence: confidence,
+                timestamp: new Date().toISOString(),
+                explanation: generatePredictionExplanation(dataToSend)
             };
             
             setPredictionResult(enhancedResult);
             toast.update(toastId, { 
-                render: `Prediksi selesai! Hasil: ${result.decision}`, 
+                render: `Prediksi selesai! Hasil: ${result.decision || result.statusKelulusan}`, 
                 type: 'success', 
                 autoClose: 3000, 
                 isLoading: false 
@@ -109,6 +125,61 @@ const SimulasiC45Page = () => {
                 isLoading: false 
             });
         }
+    };
+
+    // Calculate prediction confidence based on various factors
+    const calculatePredictionConfidence = (inputData) => {
+        let confidence = 70; // Base confidence
+        
+        // Increase confidence for clear-cut cases
+        if (inputData.ipk >= 3.5 && inputData.penghasilanOrtu === 'Rendah') {
+            confidence += 15;
+        }
+        if (inputData.ikutOrganisasi === 'Ya' && inputData.ikutUKM === 'Ya') {
+            confidence += 10;
+        }
+        if (inputData.jmlTanggungan >= 3 && inputData.penghasilanOrtu === 'Rendah') {
+            confidence += 10;
+        }
+        
+        // Decrease confidence for borderline cases
+        if (inputData.ipk < 3.0) {
+            confidence -= 10;
+        }
+        if (inputData.penghasilanOrtu === 'Tinggi' && inputData.jmlTanggungan <= 2) {
+            confidence -= 15;
+        }
+        
+        return Math.min(Math.max(confidence, 60), 95);
+    };
+
+    // Generate human-readable explanation
+    const generatePredictionExplanation = (inputData) => {
+        const factors = [];
+        
+        if (inputData.ipk >= 3.5) {
+            factors.push(`IPK tinggi (${inputData.ipk}) mendukung penerimaan`);
+        } else if (inputData.ipk < 3.0) {
+            factors.push(`IPK rendah (${inputData.ipk}) mengurangi peluang`);
+        }
+        
+        if (inputData.penghasilanOrtu === 'Rendah') {
+            factors.push('Penghasilan orang tua rendah (sesuai target beasiswa)');
+        }
+        
+        if (inputData.jmlTanggungan >= 3) {
+            factors.push(`Tanggungan keluarga besar (${inputData.jmlTanggungan} orang)`);
+        }
+        
+        if (inputData.ikutOrganisasi === 'Ya') {
+            factors.push('Aktif dalam organisasi');
+        }
+        
+        if (inputData.ikutUKM === 'Ya') {
+            factors.push('Aktif dalam UKM');
+        }
+        
+        return factors.length > 0 ? factors.join(', ') : 'Berdasarkan kombinasi semua kriteria';
     };
     
     return (
