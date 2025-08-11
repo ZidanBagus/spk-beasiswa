@@ -21,16 +21,15 @@ const CorrelationMatrix = ({ isLoading }) => {
         } catch (err) {
             console.error('Error fetching correlation data:', err);
             setError('Menggunakan data simulasi karena error: ' + err.message);
-            // Fallback mock data
+            // Fallback mock data (hanya 5 atribut input)
             setCorrelationData({
-                attributes: ['IPK', 'Penghasilan', 'Tanggungan', 'Organisasi', 'UKM', 'Status'],
+                attributes: ['IPK', 'Penghasilan', 'Tanggungan', 'Organisasi', 'UKM'],
                 matrix: [
-                    [1.00, -0.23, 0.15, 0.34, 0.28, 0.67],
-                    [-0.23, 1.00, 0.45, -0.12, -0.08, -0.52],
-                    [0.15, 0.45, 1.00, 0.09, 0.11, -0.31],
-                    [0.34, -0.12, 0.09, 1.00, 0.56, 0.41],
-                    [0.28, -0.08, 0.11, 0.56, 1.00, 0.38],
-                    [0.67, -0.52, -0.31, 0.41, 0.38, 1.00]
+                    [1.00, -0.23, 0.15, 0.34, 0.28],
+                    [-0.23, 1.00, 0.45, -0.12, -0.08],
+                    [0.15, 0.45, 1.00, 0.09, 0.11],
+                    [0.34, -0.12, 0.09, 1.00, 0.56],
+                    [0.28, -0.08, 0.11, 0.56, 1.00]
                 ]
             });
         } finally {
@@ -163,8 +162,8 @@ const CorrelationMatrix = ({ isLoading }) => {
                         
                         <div className="mt-3 p-2 bg-info bg-opacity-10 rounded">
                             <small className="text-muted">
-                                📊 <strong>Catatan:</strong> Matriks ini menunjukkan keterkaitan statistik antar variabel. 
-                                Korelasi tinggi tidak selalu berarti sebab-akibat, tetapi menunjukkan pola hubungan dalam data.
+                                📊 <strong>Catatan:</strong> Matriks ini menunjukkan keterkaitan statistik antar 5 atribut input seleksi. 
+                                Status kelulusan tidak disertakan karena merupakan hasil output, bukan variabel input.
                             </small>
                         </div>
                     </>

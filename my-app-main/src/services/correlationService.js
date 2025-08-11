@@ -53,8 +53,7 @@ class CorrelationService {
             { name: 'Penghasilan', field: 'penghasilanOrtu' },
             { name: 'Tanggungan', field: 'jmlTanggungan' },
             { name: 'Organisasi', field: 'ikutOrganisasi' },
-            { name: 'UKM', field: 'ikutUKM' },
-            { name: 'Status', field: 'statusKelulusan' }
+            { name: 'UKM', field: 'ikutUKM' }
         ];
 
         // Konversi semua atribut ke numerik
